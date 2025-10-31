@@ -1,0 +1,190 @@
+ /* Global Styles */
+    :root {
+      --default-font: "Roboto", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+      --heading-font: "Raleway", sans-serif;
+      --nav-font: "Poppins", sans-serif;
+      --background-color: #ffffff;
+      --default-color: #444444;
+      --heading-color: #111111;
+      --accent-color: #e03a3c;
+      --surface-color: #ffffff;
+      --contrast-color: #ffffff;
+      --dark-background: #1b1b1b;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--default-font);
+      color: var(--default-color);
+      background-color: var(--background-color);
+      line-height: 1.6;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 15px;
+    }
+
+    .section {
+      padding: 80px 0;
+    }
+
+    .section-bg {
+      background-color: var(--dark-background);
+      color: var(--contrast-color);
+    }
+
+    .section-title {
+      text-align: center;
+      padding-bottom: 60px;
+      position: relative;
+    }
+
+    .section-title h2 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      position: relative;
+      text-transform: uppercase;
+      font-family: var(--heading-font);
+      color: var(--heading-color);
+    }
+
+    .section-title h2:after {
+      content: "";
+      position: absolute;
+      display: block;
+      width: 50px;
+      height: 3px;
+      background: var(--accent-color);
+      left: 0;
+      right: 0;
+      bottom: 0;
+      margin: auto;
+    }
+
+    .section-title p {
+      margin-bottom: 0;
+      font-size: 18px;
+    }
+
+    .dark-background .section-title h2 {
+      color: var(--contrast-color);
+    }
+
+    /* Modes Section */
+    .modes .mode-item {
+      background-color: var(--surface-color);
+      padding: 40px 30px;
+      box-shadow: 0px 5px 30px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      transition: all 0.3s ease;
+      border-top: 4px solid transparent;
+    }
+
+    .modes .mode-item:hover {
+      transform: translateY(-10px);
+      box-shadow: 0px 15px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .modes .mode-icon {
+      margin-bottom: 20px;
+    }
+
+    .modes .mode-icon i {
+      font-size: 48px;
+      color: var(--accent-color);
+    }
+
+    .modes .mode-item h4 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 15px;
+      font-family: var(--heading-font);
+      color: var(--heading-color);
+    }
+
+    .modes .mode-item p {
+      margin-bottom: 25px;
+      color: var(--default-color);
+    }
+
+    .modes .mode-link {
+      display: inline-flex;
+      align-items: center;
+      color: var(--accent-color);
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .modes .mode-link:hover {
+      color: color-mix(in srgb, var(--accent-color), transparent 25%);
+      transform: translateX(5px);
+    }
+
+    .modes .mode-link i {
+      margin-left: 5px;
+      transition: transform 0.3s ease;
+    }
+
+    .modes .mode-link:hover i {
+      transform: translateX(5px);
+    }
+
+    /* AI Comparison Mode Special Styling */
+    .mode-item.ai-comparison {
+      border-top: 4px solid var(--accent-color);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mode-item.ai-comparison::before {
+      content: "NEW";
+      position: absolute;
+      top: 20px;
+      right: -30px;
+      background: var(--accent-color);
+      color: white;
+      padding: 5px 30px;
+      transform: rotate(45deg);
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .mode-item.ai-comparison .mode-icon i {
+      color: #4dabf7;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+      .modes .mode-item {
+        margin-bottom: 30px;
+      }
+    }
+
+    /* Animation */
+    [data-aos] {
+      opacity: 0;
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    [data-aos].aos-animate {
+      opacity: 1;
+    }
+
+    [data-aos="fade-up"] {
+      transform: translateY(30px);
+    }
+
+    [data-aos="fade-up"].aos-animate {
+      transform: translateY(0);
+    }
