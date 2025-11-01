@@ -1,0 +1,35 @@
+{
+  "name": "Bass Boost",
+  "description": "Enhanced bass frequencies",
+  "bands": [
+    {
+      "id": 1,
+      "startFreq": 20,
+      "endFreq": 250,
+      "gain": 1.8,
+      "color": "#e03a3c"
+    },
+    {
+      "id": 2,
+      "startFreq": 250,
+      "endFreq": 1000,
+      "gain": 1.2,
+      "color": "#17a2b8"
+    },
+    {
+      "id": 3,
+      "startFreq": 1000,
+      "endFreq": 4000,
+      "gain": 1.0,
+      "color": "#28a745"
+    },
+    {
+      "id": 4,
+      "startFreq": 4000,
+      "endFreq": 20000,
+      "gain": 1.0,
+      "color": "#ffc107"
+    }
+  ],
+  "created_at": "2025-11-01T18:55:21.794354"
+}
