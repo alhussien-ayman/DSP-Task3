@@ -1,0 +1,18 @@
+# Python general ignores
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.log
+
+# Virtual environments
+newvenv/
+venv/
+.venv/
+env/
+.env/
+
+# VS Code / PyCharm / other IDEs
+.vscode/
+.idea/
