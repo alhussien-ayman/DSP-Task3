@@ -10,6 +10,10 @@ import os
 import tempfile
 import soundfile as sf
 from datetime import datetime
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend
+import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
 
 generic_bp = Blueprint('generic', __name__)
 
@@ -41,6 +45,7 @@ def generic_home():
             "list_presets": "GET /api/generic/list_presets",
             "save_preset": "POST /api/generic/save_preset",
             "load_preset": "GET /api/generic/load_preset?name=preset_name",
+            "delete_preset": "DELETE /api/generic/delete_preset?name=preset_name",
             "generate_test_signal": "GET/POST /api/generic/generate_test_signal",
             "process_audio": "POST /api/generic/process_audio",
             "compute_spectrum": "POST /api/generic/compute_spectrum",
@@ -148,21 +153,8 @@ def load_preset():
             print(f"✅ Loaded preset: {preset_name} with {len(preset_data.get('bands', []))} bands")
             return jsonify(preset_data)
         else:
-            print(f"⚠️  Preset not found, creating default: {preset_name}")
-            # Return default preset if file doesn't exist
-            default_preset = {
-                'name': preset_name,
-                'description': 'Default equalizer preset',
-                'bands': [
-                    {'id': 1, 'startFreq': 20, 'endFreq': 250, 'gain': 1.0},
-                    {'id': 2, 'startFreq': 250, 'endFreq': 1000, 'gain': 1.0},
-                    {'id': 3, 'startFreq': 1000, 'endFreq': 4000, 'gain': 1.0},
-                    {'id': 4, 'startFreq': 4000, 'endFreq': 20000, 'gain': 1.0}
-                ],
-                'created_at': datetime.now().isoformat(),
-                'is_default': True
-            }
-            return jsonify(default_preset)
+            print(f"⚠️  Preset not found: {preset_name}")
+            return jsonify({'error': f'Preset "{preset_name}" not found'}), 404
             
     except Exception as e:
         print(f"❌ Error loading preset: {e}")
@@ -418,7 +410,7 @@ def compute_spectrum():
 
 @generic_bp.route('/compute_spectrogram', methods=['POST'])
 def compute_spectrogram():
-    """Compute spectrogram for visualization"""
+    """Compute spectrogram for visualization with optional time limit"""
     try:
         print("🎨 Computing spectrogram...")
         
@@ -426,6 +418,7 @@ def compute_spectrogram():
             return jsonify({'error': 'No file uploaded'}), 400
         
         file = request.files['file']
+        max_duration = float(request.form.get('max_duration', 0))  # 0 means no limit
         
         # Validate file
         if not allowed_file(file.filename):
@@ -437,6 +430,14 @@ def compute_spectrogram():
         # Convert to mono if stereo
         if len(audio_data.shape) > 1:
             audio_data = np.mean(audio_data, axis=1)
+        
+        # Apply time limit if specified
+        if max_duration > 0:
+            max_samples = int(max_duration * sample_rate)
+            if len(audio_data) > max_samples:
+                audio_data = audio_data[:max_samples]
+                file_info['duration'] = min(file_info['duration'], max_duration)
+                print(f"⏰ Limited audio to first {max_duration} seconds")
         
         # Normalize
         audio_data = audio_data.astype(np.float32)
@@ -480,17 +481,17 @@ def compute_spectrogram():
             'sample_rate': sample_rate,
             'n_fft': n_fft,
             'hop_length': hop_length,
-            'duration': file_info['duration']
+            'duration': file_info['duration'],
+            'max_duration_applied': max_duration if max_duration > 0 else None
         }
         
-        print(f"✅ Spectrogram computed: {spectrogram_db.shape[1]} time frames, {spectrogram_db.shape[0]} frequency bins")
+        print(f"✅ Spectrogram computed: {spectrogram_db.shape[1]} time frames, {spectrogram_db.shape[0]} frequency bins, duration: {file_info['duration']:.1f}s")
         
         return jsonify(spectrogram_data)
         
     except Exception as e:
         print(f"❌ Spectrogram computation error: {e}")
         return jsonify({'error': f'Spectrogram computation failed: {str(e)}'}), 500
-
 @generic_bp.route('/health', methods=['GET'])
 def health():
     """Health check endpoint"""
@@ -502,168 +503,7 @@ def health():
         'presets_dir_exists': os.path.exists(PRESETS_DIR),
         'presets_count': len([f for f in os.listdir(PRESETS_DIR) if f.endswith('.json')]) if os.path.exists(PRESETS_DIR) else 0
     })
-# =====================================================
-@generic_bp.route('/analyze_audio', methods=['POST'])
-def analyze_audio():
-    """Comprehensive audio analysis"""
-    try:
-        print("🔍 Analyzing audio file...")
-        
-        if 'file' not in request.files:
-            return jsonify({'error': 'No file uploaded'}), 400
-        
-        file = request.files['file']
-        
-        # Validate file
-        if not allowed_file(file.filename):
-            return jsonify({'error': 'File type not supported'}), 400
-        
-        # Read audio file
-        audio_data, sample_rate, file_info = read_audio_file(file)
-        
-        # Convert to mono if stereo
-        if len(audio_data.shape) > 1:
-            audio_data = np.mean(audio_data, axis=1)
-        
-        # Normalize
-        audio_data = audio_data.astype(np.float32)
-        if np.max(np.abs(audio_data)) > 0:
-            audio_data = audio_data / np.max(np.abs(audio_data))
-        
-        # Calculate audio properties
-        duration = len(audio_data) / sample_rate
-        
-        # Time domain analysis
-        rms = np.sqrt(np.mean(audio_data**2))
-        peak = np.max(np.abs(audio_data))
-        crest_factor = peak / (rms + 1e-10)
-        
-        # Zero-crossing rate
-        zero_crossings = np.sum(np.diff(np.sign(audio_data)) != 0)
-        zcr = zero_crossings / duration
-        
-        # Frequency domain analysis
-        n = len(audio_data)
-        window = np.hanning(n)
-        windowed_audio = audio_data * window
-        fft_data = fft.rfft(windowed_audio)
-        frequencies = fft.rfftfreq(n, d=1/sample_rate)
-        magnitude = np.abs(fft_data)
-        
-        # Spectral centroid
-        spectral_centroid = np.sum(frequencies * magnitude) / np.sum(magnitude)
-        
-        # Spectral bandwidth
-        spectral_bandwidth = np.sqrt(np.sum(((frequencies - spectral_centroid)**2) * magnitude) / np.sum(magnitude))
-        
-        # Spectral rolloff (85%)
-        total_energy = np.sum(magnitude)
-        cumulative_energy = np.cumsum(magnitude)
-        rolloff_index = np.where(cumulative_energy >= 0.85 * total_energy)[0]
-        spectral_rolloff = frequencies[rolloff_index[0]] if len(rolloff_index) > 0 else frequencies[-1]
-        
-        # Frequency band energies
-        bands = [
-            {'name': 'Sub Bass', 'min': 20, 'max': 60},
-            {'name': 'Bass', 'min': 60, 'max': 250},
-            {'name': 'Low Mid', 'min': 250, 'max': 500},
-            {'name': 'Mid', 'min': 500, 'max': 2000},
-            {'name': 'Upper Mid', 'min': 2000, 'max': 4000},
-            {'name': 'Presence', 'min': 4000, 'max': 6000},
-            {'name': 'Brilliance', 'min': 6000, 'max': 20000}
-        ]
-        
-        band_energies = []
-        for band in bands:
-            band_mask = (frequencies >= band['min']) & (frequencies <= band['max'])
-            band_energy = np.sum(magnitude[band_mask])
-            band_energies.append({
-                'name': band['name'],
-                'energy': float(band_energy),
-                'percentage': float(band_energy / np.sum(magnitude) * 100)
-            })
-        
-        analysis_results = {
-            'file_info': file_info,
-            'time_domain': {
-                'rms': float(rms),
-                'peak': float(peak),
-                'crest_factor': float(crest_factor),
-                'zero_crossing_rate': float(zcr)
-            },
-            'frequency_domain': {
-                'spectral_centroid': float(spectral_centroid),
-                'spectral_bandwidth': float(spectral_bandwidth),
-                'spectral_rolloff': float(spectral_rolloff)
-            },
-            'band_energies': band_energies,
-            'loudness': float(20 * np.log10(rms + 1e-10)),
-            'dynamic_range': float(20 * np.log10(peak / (rms + 1e-10)))
-        }
-        
-        print(f"✅ Audio analysis completed for {file.filename}")
-        
-        return jsonify(analysis_results)
-        
-    except Exception as e:
-        print(f"❌ Audio analysis error: {e}")
-        return jsonify({'error': f'Audio analysis failed: {str(e)}'}), 500
-    
-#==============================
-@generic_bp.route('/get_audio_waveform', methods=['POST'])
-def get_audio_waveform():
-    """Extract audio waveform data for plotting"""
-    try:
-        print("📈 Extracting audio waveform data...")
-        
-        if 'file' not in request.files:
-            return jsonify({'error': 'No file uploaded'}), 400
-        
-        file = request.files['file']
-        
-        # Validate file
-        if not allowed_file(file.filename):
-            return jsonify({'error': 'File type not supported'}), 400
-        
-        # Read audio file
-        audio_data, sample_rate, file_info = read_audio_file(file)
-        
-        # Convert to mono if stereo
-        if len(audio_data.shape) > 1:
-            audio_data = np.mean(audio_data, axis=1)
-        
-        # Normalize
-        audio_data = audio_data.astype(np.float32)
-        if np.max(np.abs(audio_data)) > 0:
-            audio_data = audio_data / np.max(np.abs(audio_data))
-        
-        # Limit data size for frontend (to prevent huge responses)
-        max_points = 10000
-        if len(audio_data) > max_points:
-            step = len(audio_data) // max_points
-            audio_data = audio_data[::step]
-        
-        # Create time array
-        duration = len(audio_data) / sample_rate
-        time = np.linspace(0, duration, len(audio_data))
-        
-        waveform_data = {
-            'time': time.tolist(),
-            'amplitude': audio_data.tolist(),
-            'sample_rate': sample_rate,
-            'duration': duration,
-            'samples': len(audio_data),
-            'max_points': max_points
-        }
-        
-        print(f"✅ Waveform data extracted: {len(audio_data)} points, {duration:.2f}s duration")
-        
-        return jsonify(waveform_data)
-        
-    except Exception as e:
-        print(f"❌ Waveform extraction error: {e}")
-        return jsonify({'error': f'Waveform extraction failed: {str(e)}'}), 500
-#==================================================================
+
 def read_audio_file(file):
     """
     Read audio file with automatic format detection
@@ -830,6 +670,18 @@ def create_default_presets():
                 {'id': 2, 'startFreq': 250, 'endFreq': 1000, 'gain': 1.0},
                 {'id': 3, 'startFreq': 1000, 'endFreq': 4000, 'gain': 1.2},
                 {'id': 4, 'startFreq': 4000, 'endFreq': 20000, 'gain': 1.6}
+            ]
+        },
+        'tv_mode': {
+            'name': 'TV Mode',
+            'description': 'Enhanced voice clarity for TV/movies',
+            'bands': [
+                {'id': 1, 'startFreq': 20, 'endFreq': 100, 'gain': 0.8},
+                {'id': 2, 'startFreq': 100, 'endFreq': 300, 'gain': 1.0},
+                {'id': 3, 'startFreq': 300, 'endFreq': 1000, 'gain': 1.5},
+                {'id': 4, 'startFreq': 1000, 'endFreq': 3000, 'gain': 1.8},
+                {'id': 5, 'startFreq': 3000, 'endFreq': 8000, 'gain': 1.3},
+                {'id': 6, 'startFreq': 8000, 'endFreq': 20000, 'gain': 1.0}
             ]
         }
     }

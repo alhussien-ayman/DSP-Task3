@@ -1,0 +1,43 @@
+{
+  "name": "TV Mode",
+  "description": "Optimized for clear dialogue and realistic TV speaker sound",
+  "bands": [
+    {
+      "id": 1,
+      "startFreq": 20,
+      "endFreq": 100,
+      "gain": 0.6
+    },
+    {
+      "id": 2,
+      "startFreq": 100,
+      "endFreq": 300,
+      "gain": 0.9
+    },
+    {
+      "id": 3,
+      "startFreq": 300,
+      "endFreq": 1000,
+      "gain": 1.4
+    },
+    {
+      "id": 4,
+      "startFreq": 1000,
+      "endFreq": 3000,
+      "gain": 1.8
+    },
+    {
+      "id": 5,
+      "startFreq": 3000,
+      "endFreq": 8000,
+      "gain": 1.5
+    },
+    {
+      "id": 6,
+      "startFreq": 8000,
+      "endFreq": 20000,
+      "gain": 0.9
+    }
+  ],
+  "created_at": "2025-11-07T19:45:00.000000"
+}

@@ -1,0 +1,36 @@
+{
+  "name": "Mid_boost",
+  "description": "Updated equalizer preset with 4 bands",
+  "bands": [
+    {
+      "bandwidth": 230,
+      "endFreq": 250,
+      "gain": 1,
+      "id": 1762615040983.561,
+      "startFreq": 20
+    },
+    {
+      "bandwidth": 750,
+      "endFreq": 1000,
+      "gain": 0.1,
+      "id": 1762615040984.8057,
+      "startFreq": 250
+    },
+    {
+      "bandwidth": 3000,
+      "endFreq": 4000,
+      "gain": 1,
+      "id": 1762615040984.9917,
+      "startFreq": 1000
+    },
+    {
+      "bandwidth": 16000,
+      "endFreq": 20000,
+      "gain": 1,
+      "id": 1762615040984.9954,
+      "startFreq": 4000
+    }
+  ],
+  "created_at": "2025-11-08T17:27:04.052893",
+  "version": "1.0"
+}

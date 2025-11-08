@@ -10,12 +10,13 @@
 .control-panel {
     background: var(--surface-color);
     padding: 25px;
-    border-radius: 10px;
+    border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     margin-bottom: 20px;
     height: fit-content;
     position: sticky;
     top: 100px;
+    border: 1px solid color-mix(in srgb, var(--default-color), transparent 90%);
 }
 
 .panel-header {
@@ -61,7 +62,7 @@
 }
 
 .band-control:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     transform: translateY(-2px);
 }
 
@@ -133,177 +134,176 @@
 
 .visualization-panel {
     background: var(--surface-color);
-    padding: 25px;
-    border-radius: 10px;
+    padding: 30px; /* Increased padding */
+    border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    border: 1px solid color-mix(in srgb, var(--default-color), transparent 90%);
 }
 
-.graph-container {
-    margin-bottom: 30px;
+/* Graph Box Styles */
+.graph-box {
+    background: var(--background-color);
+    border: 1px solid color-mix(in srgb, var(--default-color), transparent 85%);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
 }
 
-.graph-container h5 {
+.graph-box:hover {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border-color: color-mix(in srgb, var(--accent-color), transparent 70%);
+}
+
+.graph-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid color-mix(in srgb, var(--default-color), transparent 90%);
+}
+
+.graph-header h4, .graph-header h5 {
+    margin: 0;
     color: var(--heading-color);
     font-weight: 600;
-    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
 }
 
-.chart-wrapper {
-    background: var(--background-color);
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid color-mix(in srgb, var(--default-color), transparent 85%);
-    position: relative;
+.graph-header h4 {
+    font-size: 1.1rem;
 }
 
-.chart-wrapper canvas {
-    width: 100% !important;
-    height: 250px !important;
+.graph-header h5 {
+    font-size: 1rem;
+}
+
+.viewer-title {
+    display: flex;
+    align-items: center;
+    margin: 0;
 }
 
 .graph-controls {
     display: flex;
+    align-items: center;
     gap: 10px;
-}
-
-/* Signal Waveforms Section */
-.signal-waveforms {
-    margin-bottom: 30px;
-}
-
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.section-header h5 {
-    color: var(--heading-color);
-    font-weight: 600;
-    margin: 0;
-}
-
-.waveform-card {
-    background: var(--background-color);
-    padding: 20px;
-    border-radius: 8px;
-    border: 1px solid color-mix(in srgb, var(--default-color), transparent 85%);
-    height: 100%;
-}
-
-.waveform-card h6 {
-    color: var(--heading-color);
-    font-weight: 600;
-    margin-bottom: 15px;
-}
-
-.plotly-waveform {
-    height: 200px;
-    width: 100%;
-    background: var(--surface-color);
-    border-radius: 4px;
-}
-
-.plotly-waveform .js-plotly-plot {
-    height: 100% !important;
-}
-
-/* Signal Viewers */
-.signal-viewers {
-    margin-bottom: 30px;
-}
-
-.signal-viewers h5 {
-    color: var(--heading-color);
-    font-weight: 600;
-    margin-bottom: 20px;
-}
-
-.viewer-container {
-    background: var(--background-color);
-    padding: 20px;
-    border-radius: 8px;
-    border: 1px solid color-mix(in srgb, var(--default-color), transparent 85%);
-    height: 100%;
-}
-
-.viewer-container h6 {
-    color: var(--heading-color);
-    font-weight: 600;
-    margin-bottom: 15px;
-}
-
-.waveform {
-    height: 120px;
-    background: color-mix(in srgb, var(--surface-color), transparent 20%);
-    border-radius: 4px;
-    margin-bottom: 10px;
-    border: 1px solid color-mix(in srgb, var(--default-color), transparent 80%);
-    position: relative;
-}
-
-.waveform-placeholder {
-    background: color-mix(in srgb, var(--default-color), transparent 95%);
-    border: 2px dashed color-mix(in srgb, var(--default-color), transparent 70%);
-}
-
-.player-controls {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
 }
 
 .speed-control {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-left: auto;
 }
 
 .speed-label {
     font-size: 0.85rem;
     color: color-mix(in srgb, var(--default-color), transparent 30%);
+    white-space: nowrap;
 }
 
-.speed-value {
-    font-size: 0.85rem;
-    font-weight: 500;
-    min-width: 35px;
+.speed-select {
+    width: auto !important;
+    min-width: 80px;
 }
 
-.player-controls .form-range {
-    width: 80px;
-}
-
-.spectrograms {
-    margin-top: 20px;
-}
-
-.spectrogram-header h5 {
-    color: var(--heading-color);
-    font-weight: 600;
-    margin: 0;
-}
-
-.spectrogram-container {
-    margin-bottom: 20px;
-}
-
-.spectrogram-container h6 {
-    color: var(--heading-color);
-    font-weight: 600;
+.cine-viewer {
+    height: 300px !important; /* Increased from 250px to 300px */
     margin-bottom: 10px;
-    font-size: 0.9rem;
+    background: var(--surface-color);
+    border-radius: 6px;
+    border: 1px solid color-mix(in srgb, var(--default-color), transparent 80%);
 }
 
-.spectrogram-container canvas {
-    width: 100%;
-    height: 150px;
-    background: var(--background-color);
+.spectrogram-plot {
+    height: 400px !important; /* Increased from 280px to 400px */
+    background: var(--surface-color);
+    border-radius: 6px;
     border: 1px solid color-mix(in srgb, var(--default-color), transparent 80%);
-    border-radius: 4px;
+}
+
+.spectrum-plot {
+    height: 350px !important; /* Increased from 280px to 350px */
+    background: var(--surface-color);
+    border-radius: 6px;
+    border: 1px solid color-mix(in srgb, var(--default-color), transparent 80%);
+}
+
+/* Signal Viewers Stack Layout */
+.viewer-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.spectrogram-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Viewer Controls */
+.viewer-controls-top {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.playback-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.viewer-controls {
+    margin-top: 12px;
+}
+
+.viewer-time-info {
+    font-size: 0.85rem;
+    color: color-mix(in srgb, var(--default-color), transparent 30%);
+}
+
+/* Spectrum Info */
+.spectrum-info {
+    background: color-mix(in srgb, var(--surface-color), transparent 50%);
+    padding: 10px 15px;
+    border-radius: 6px;
+    border: 1px solid color-mix(in srgb, var(--default-color), transparent 85%);
+}
+
+.spectrogram-info {
+    text-align: center;
+    padding: 8px 0;
+}
+
+/* Badge Styles */
+.badge {
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 4px 8px;
+}
+
+/* Timeline Section */
+.timeline-section {
+    background: var(--surface-color);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--default-color), transparent 85%);
+}
+
+.timeline-slider {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+}
+
+.timeline-labels {
+    margin-top: 8px;
+    font-size: 0.8rem;
+    color: color-mix(in srgb, var(--default-color), transparent 30%);
 }
 
 /* Button Styles */
@@ -330,6 +330,7 @@
     background: color-mix(in srgb, var(--accent-color), transparent 15%);
     border-color: color-mix(in srgb, var(--accent-color), transparent 15%);
     color: white;
+    transform: translateY(-1px);
 }
 
 .btn-secondary {
@@ -342,6 +343,7 @@
     background: #5a6268;
     border-color: #545b62;
     color: white;
+    transform: translateY(-1px);
 }
 
 .btn-info {
@@ -354,6 +356,7 @@
     background: #138496;
     border-color: #117a8b;
     color: white;
+    transform: translateY(-1px);
 }
 
 .btn-success {
@@ -366,6 +369,7 @@
     background: #218838;
     border-color: #1e7e34;
     color: white;
+    transform: translateY(-1px);
 }
 
 .btn-warning {
@@ -378,6 +382,7 @@
     background: #e0a800;
     border-color: #d39e00;
     color: #212529;
+    transform: translateY(-1px);
 }
 
 .btn-outline-primary {
@@ -389,6 +394,7 @@
 .btn-outline-primary:hover {
     background: var(--accent-color);
     color: white;
+    transform: translateY(-1px);
 }
 
 .btn-outline-secondary {
@@ -400,10 +406,11 @@
 .btn-outline-secondary:hover {
     background: #6c757d;
     color: white;
+    transform: translateY(-1px);
 }
 
 .btn-sm {
-    padding: 5px 10px;
+    padding: 6px 12px;
     font-size: 0.8rem;
 }
 
@@ -412,6 +419,7 @@
     background: var(--background-color);
     color: var(--default-color);
     border: 1px solid color-mix(in srgb, var(--default-color), transparent 70%);
+    border-radius: 6px;
 }
 
 .form-select:focus, .form-control:focus {
@@ -430,11 +438,13 @@
 .progress {
     height: 8px;
     background-color: color-mix(in srgb, var(--default-color), transparent 90%);
+    border-radius: 4px;
 }
 
 .progress-bar {
     background-color: var(--accent-color);
     transition: width 0.3s ease;
+    border-radius: 4px;
 }
 
 /* Notification Styles */
@@ -457,6 +467,42 @@
 .alert-info {
     background: #cff4fc;
     color: #055160;
+}
+
+/* Preset Management */
+.preset-management {
+    background: color-mix(in srgb, var(--surface-color), transparent 20%);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--default-color), transparent 85%);
+}
+
+.preset-management .form-control {
+    font-size: 0.9rem;
+}
+
+/* Section Headers */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid color-mix(in srgb, var(--default-color), transparent 90%);
+}
+
+.section-header h4 {
+    margin: 0;
+    color: var(--heading-color);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.global-controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 /* Responsive Design */
@@ -499,6 +545,68 @@
     
     .plotly-waveform {
         height: 150px;
+    }
+    
+    .graph-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .graph-controls {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    
+    .viewer-controls-top {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    
+    .viewer-controls .d-flex {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+    
+    .playback-controls {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .viewer-time-info {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .global-controls {
+        justify-content: center;
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .equalizer-interface {
+        padding: 20px 0;
+    }
+    
+    .control-panel, .visualization-panel {
+        padding: 15px;
+    }
+    
+    .graph-box {
+        padding: 15px;
+    }
+    
+   .cine-viewer {
+        height: 300px !important; /* Slightly larger on mobile too */
+    }
+    .spectrum-plot {
+        height: 200px !important;
+    }
+    
+    .spectrogram-plot {
+        height: 180px !important;
     }
 }
 
@@ -552,12 +660,6 @@
     border-left-color: #fd7e14;
 }
 
-/* Waveform Customization */
-wavesurfer-region {
-    border: 1px solid var(--accent-color);
-    background: color-mix(in srgb, var(--accent-color), transparent 90%);
-}
-
 /* Plotly Customization */
 .js-plotly-plot .plotly .modebar {
     background: transparent !important;
@@ -578,23 +680,6 @@ wavesurfer-region {
 /* Animation for waveform toggle */
 .waveform-transition {
     transition: all 0.3s ease-in-out;
-}
-
-/* Analysis Stats */
-.time-stats, .freq-stats {
-    background: color-mix(in srgb, var(--surface-color), transparent 20%);
-    padding: 15px;
-    border-radius: 6px;
-    border: 1px solid color-mix(in srgb, var(--default-color), transparent 90%);
-}
-
-/* Chart containers */
-.analysis-content canvas {
-    width: 100% !important;
-    height: 200px !important;
-    background: var(--background-color);
-    border-radius: 4px;
-    border: 1px solid color-mix(in srgb, var(--default-color), transparent 80%);
 }
 
 /* File info styles */
@@ -646,32 +731,6 @@ wavesurfer-region {
     display: block;
     text-align: center;
     color: color-mix(in srgb, var(--default-color), transparent 40%);
-}
-
-
-
-
-/* Stack input/output viewers vertically */
-.signal-viewers .row {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-}
-
-.signal-viewers .col-md-6 {
-  width: 100%;
-}
-
-.signal-waveforms .row,
-.signal-viewers .row {
-  display: flex;
-  flex-direction: column;
-}
-
-.signal-waveforms .col-md-6,
-.signal-viewers .col-md-6 {
-  width: 100%;
-  margin-bottom: 20px;
 }
 
 /* Headline Section Styles */
@@ -779,4 +838,203 @@ wavesurfer-region {
     .feature-badge {
         width: fit-content;
     }
+}
+
+/* Animation for smooth transitions */
+.band-control, .viewer-container, .waveform-card, .graph-box {
+    transition: all 0.3s ease;
+}
+
+/* Loading States */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+    position: relative;
+}
+
+.loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid color-mix(in srgb, var(--default-color), transparent 70%);
+    border-top: 2px solid var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Enhanced Button Styles */
+.btn {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn:active {
+    transform: translateY(1px);
+}
+
+.btn i {
+    transition: transform 0.3s ease;
+}
+
+.btn:hover i {
+    transform: scale(1.1);
+}
+
+/* Debug Panel Enhancement */
+#debugPanel {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Notification Enhancement */
+.alert.position-fixed {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border: none;
+    border-left: 4px solid;
+}
+
+.alert-success {
+    border-left-color: #28a745;
+}
+
+.alert-danger {
+    border-left-color: #dc3545;
+}
+
+.alert-info {
+    border-left-color: #17a2b8;
+}
+
+.alert-warning {
+    border-left-color: #ffc107;
+}
+
+/* Size Adjustments - Make controller bigger and graphs smaller */
+@media (min-width: 992px) {
+    .equalizer-interface .col-lg-4 {
+        flex: 0 0 40%;
+        max-width: 40%;
+    }
+    
+    .equalizer-interface .col-lg-8 {
+        flex: 0 0 60%;
+        max-width: 60%;
+    }
+}
+
+/* Make control panel bigger */
+.control-panel {
+    background: var(--surface-color);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    height: fit-content;
+    position: sticky;
+    top: 100px;
+    font-size: 1rem;
+}
+
+.control-panel .form-label {
+    font-size: 0.95rem;
+}
+
+.control-panel .form-control,
+.control-panel .form-select {
+    padding: 10px 14px;
+    font-size: 0.95rem;
+}
+
+/* Compact visualization sections */
+.signal-viewers-section,
+.frequency-spectrum-section,
+.spectrograms-section {
+    margin-bottom: 25px;
+}
+
+.section-header h4 {
+    font-size: 1.1rem;
+    margin-bottom: 0;
+}
+
+.section-header h5 {
+    font-size: 1rem;
+    margin-bottom: 0;
+}
+
+/* Adjust viewer controls */
+.viewer-controls {
+    margin-top: 8px;
+}
+
+.viewer-time-info {
+    font-size: 0.85rem;
+}
+
+/* Compact chart wrappers */
+.chart-wrapper {
+    padding: 12px;
+}
+
+.chart-wrapper canvas {
+    height: 200px !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991px) {
+    .equalizer-interface .col-lg-4,
+    .equalizer-interface .col-lg-8 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    .control-panel {
+        position: static;
+        margin-bottom: 30px;
+    }
+}
+
+/* Color coding for different sections */
+.viewer-stack .graph-box:first-child {
+    border-left: 4px solid #e03a3c;
+}
+
+.viewer-stack .graph-box:last-child {
+    border-left: 4px solid #28a745;
+}
+
+.spectrogram-stack .graph-box:first-child {
+    border-left: 4px solid #17a2b8;
+}
+
+.spectrogram-stack .graph-box:last-child {
+    border-left: 4px solid #ffc107;
+}
+
+.frequency-spectrum-section .graph-box {
+    border-left: 4px solid #6f42c1;
+}
+
+/* Hover effects for better UX */
+.graph-box:hover .graph-header {
+    border-bottom-color: color-mix(in srgb, var(--accent-color), transparent 70%);
+}
+
+/* Focus states for accessibility */
+.btn:focus,
+.form-control:focus,
+.form-select:focus {
+    outline: 2px solid color-mix(in srgb, var(--accent-color), transparent 50%);
+    outline-offset: 2px;
 }

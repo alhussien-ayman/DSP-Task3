@@ -1,0 +1,50 @@
+{
+  "name": "hussien",
+  "description": "Custom equalizer preset with 6 bands",
+  "bands": [
+    {
+      "id": 1762617060639.7842,
+      "startFreq": 20,
+      "endFreq": 250,
+      "gain": 0.8,
+      "bandwidth": 230
+    },
+    {
+      "id": 1762617060639.6897,
+      "startFreq": 250,
+      "endFreq": 1000,
+      "gain": 0.2,
+      "bandwidth": 750
+    },
+    {
+      "id": 1762617060639.4248,
+      "startFreq": 1000,
+      "endFreq": 4000,
+      "gain": 1.5,
+      "bandwidth": 3000
+    },
+    {
+      "id": 1762617060639.4285,
+      "startFreq": 4000,
+      "endFreq": 20000,
+      "gain": 1,
+      "bandwidth": 16000
+    },
+    {
+      "id": 1762618309618.9749,
+      "startFreq": 1550,
+      "endFreq": 2550,
+      "gain": 2,
+      "bandwidth": 1000
+    },
+    {
+      "id": 1762618339106.3865,
+      "startFreq": 17570,
+      "endFreq": 18570,
+      "gain": 0,
+      "bandwidth": 1000
+    }
+  ],
+  "created_at": "2025-11-08T18:14:50.987516",
+  "version": "1.0"
+}
