@@ -1,61 +1,53 @@
-from flask import Blueprint, request, jsonify
-import numpy as np
+from flask import request, jsonify
 import json
+from .base_mode import BaseMode
 
-generic_bp = Blueprint('generic', __name__)
+class GenericMode(BaseMode):
+    """Generic mode with dynamic frequency bands"""
+    
+    def __init__(self):
+        super().__init__('generic', 'generic')
+    
+    def load_settings(self):
+        """Override for generic mode - dynamic bands"""
+        # Generic mode doesn't use predefined JSON
+        return {"bands": []}  # Would be dynamic from UI
+    
+    def parse_processing_request(self, request):
+        """Override for generic mode parameters"""
+        bands_data = request.form.get('bands', '[]')
+        gains_data = request.form.get('gains', '[]')
+        scale_type = request.form.get('scale', 'linear')
+        
+        return {
+            'bands': json.loads(bands_data),
+            'gains': json.loads(gains_data),
+            'scale_type': scale_type,
+            'settings': self.load_settings()
+        }
+    
+    def process_signal(self, signal, sample_rate, processing_data):
+        """Override for generic mode processing"""
+        bands = processing_data['bands']
+        gains = processing_data['gains']
+        
+        # Convert to slider-like format for processing
+        sliders_config = []
+        slider_values = []
+        
+        for i, (band, gain) in enumerate(zip(bands, gains)):
+            sliders_config.append({
+                'name': f'Band {i+1}',
+                'frequency_bands': [band]
+            })
+            slider_values.append(gain)
+        
+        # Use the base processing with dynamic bands
+        processing_data['slider_values'] = slider_values
+        processing_data['settings'] = {'sliders': sliders_config}
+        
+        return super().process_signal(signal, sample_rate, processing_data)
 
-@generic_bp.route('/save_preset', methods=['POST'])
-def save_preset():
-    """Save equalizer preset"""
-    data = request.json
-    preset_name = data.get('name', 'preset')
-    bands = data.get('bands', [])
-    
-    # Save to file (in production, save to database)
-    preset_data = {
-        'name': preset_name,
-        'bands': bands,
-        'timestamp': np.datetime64('now').astype(str)
-    }
-    
-    # Here you would save to a file or database
-    return jsonify({'message': 'Preset saved', 'preset': preset_data})
-
-@generic_bp.route('/load_preset', methods=['GET'])
-def load_preset():
-    """Load equalizer preset"""
-    preset_name = request.args.get('name', 'default')
-    
-    # Load from file (in production, load from database)
-    # For now, return sample data
-    sample_preset = {
-        'name': preset_name,
-        'bands': [
-            {'center_freq': 100, 'gain': 1.0, 'bandwidth': 50},
-            {'center_freq': 500, 'gain': 1.2, 'bandwidth': 100},
-            {'center_freq': 1000, 'gain': 0.8, 'bandwidth': 200}
-        ]
-    }
-    
-    return jsonify(sample_preset)
-
-@generic_bp.route('/process_audio', methods=['POST'])
-def process_audio():
-    """Process audio with generic equalizer settings"""
-    data = request.json
-    audio_data = data.get('audio_data', [])
-    bands = data.get('bands', [])
-    
-    # Apply equalization (simplified)
-    processed_audio = apply_generic_equalizer(audio_data, bands)
-    
-    return jsonify({
-        'processed_audio': processed_audio.tolist(),
-        'message': 'Audio processed successfully'
-    })
-
-def apply_generic_equalizer(audio_data, bands):
-    """Apply generic equalizer to audio data"""
-    # This would contain the actual DSP implementation
-    # For now, return the input unchanged
-    return np.array(audio_data)
+# Create generic mode blueprint instance
+generic_mode_instance = GenericMode()
+generic_bp = generic_mode_instance.blueprint

@@ -1,0 +1,53 @@
+{
+  "sliders": [
+    {
+      "name": "Female Voice",
+      "frequency_bands": [
+        [296, 308],
+        [588, 616],
+        [714, 715],
+        [734, 734],
+        [742, 743],
+        [888, 928],
+        [1208, 1208]
+      ],
+      "description": "Adult female vocal characteristics across multiple frequency bands"
+    },
+    {
+      "name": "Child Voice",
+      "frequency_bands": [
+        [407, 674],
+        [675, 768],
+        [770, 820],
+        [823, 857]
+      ],
+      "description": "Child vocal characteristics with distinct frequency ranges"
+    },
+    {
+      "name": "Spanish Woman",
+      "frequency_bands": [
+        [136, 151],
+        [158, 180],
+        [187, 188],
+        [204, 224],
+        [267, 299],
+        [416, 446]
+      ],
+      "description": "Spanish female vocal patterns with specific frequency emphasis"
+    },
+    {
+      "name": "Male Voice",
+      "frequency_bands": [
+        [104, 119],
+        [137, 174],
+        [183, 294],
+        [337, 338],
+        [422, 452],
+        [512, 624],
+        [760, 760],
+        [836, 893]
+      ],
+      "description": "Adult male vocal characteristics with broad frequency coverage"
+    }
+  ]
+}

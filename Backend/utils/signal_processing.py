@@ -1,9 +1,8 @@
 import numpy as np
-import json
-import os
+import math
 
 class SignalProcessor:
-    """Custom FFT and signal processing implementation without external libraries"""
+    """Custom signal processing without external libraries"""
     
     @staticmethod
     def custom_fft(x):
@@ -11,8 +10,17 @@ class SignalProcessor:
         n = len(x)
         if n <= 1:
             return x
-        even = SignalProcessor.custom_fft(x[0::2])
+        
+        # Pad to next power of 2 if needed
+        next_power = 2 ** math.ceil(math.log2(n))
+        if n != next_power:
+            x = np.pad(x, (0, next_power - n))
+            n = next_power
+        
+        # Recursive FFT
+        even = SignalProcessor.custom_fft(x[::2])
         odd = SignalProcessor.custom_fft(x[1::2])
+        
         T = [np.exp(-2j * np.pi * k / n) * odd[k] for k in range(n // 2)]
         return [even[k] + T[k] for k in range(n // 2)] + [even[k] - T[k] for k in range(n // 2)]
     
@@ -25,30 +33,51 @@ class SignalProcessor:
         return np.conjugate(transform) / n
     
     @staticmethod
-    def apply_frequency_filter(signal, frequency_mask):
-        """Apply frequency domain filtering"""
-        fft_result = SignalProcessor.custom_fft(signal)
-        modified_fft = fft_result * frequency_mask
-        return np.real(SignalProcessor.custom_ifft(modified_fft))
-    
-    @staticmethod
-    def generate_frequency_mask(signal_length, frequency_bands, gains, sample_rate=44100):
-        """Generate frequency mask based on bands and gains"""
-        freqs = np.fft.fftfreq(signal_length, 1/sample_rate)
-        mask = np.ones(signal_length, dtype=complex)
+    def apply_multi_band_equalizer(signal, sliders_config, slider_values, sample_rate=44100):
+        """
+        Apply equalization with multiple frequency bands per slider
         
-        for band, gain in zip(frequency_bands, gains):
-            for freq_range in band:
-                low_freq, high_freq = freq_range
+        Args:
+            signal: Input audio signal
+            sliders_config: List of slider configurations from JSON
+            slider_values: Current values for each slider [0-2]
+            sample_rate: Audio sample rate
+        """
+        # Apply FFT to convert to frequency domain
+        fft_result = np.array(SignalProcessor.custom_fft(signal))
+        freqs = np.fft.fftfreq(len(fft_result), 1/sample_rate)
+        
+        # Create frequency mask (start with no changes)
+        frequency_mask = np.ones(len(fft_result), dtype=complex)
+        
+        # Apply each slider's gain to its frequency bands
+        for i, (slider_config, gain) in enumerate(zip(sliders_config, slider_values)):
+            frequency_bands = slider_config['frequency_bands']
+            
+            for band in frequency_bands:
+                low_freq, high_freq = band
+                
                 # Find indices in this frequency range
                 indices = np.where((np.abs(freqs) >= low_freq) & (np.abs(freqs) <= high_freq))[0]
-                mask[indices] *= gain
                 
-        return mask
+                # Apply the gain to these frequency components
+                frequency_mask[indices] *= gain
+        
+        # Apply the frequency mask
+        modified_fft = fft_result * frequency_mask
+        
+        # Convert back to time domain
+        processed_signal = np.real(SignalProcessor.custom_ifft(modified_fft))
+        
+        return processed_signal
     
     @staticmethod
     def compute_spectrogram(signal, window_size=1024, hop_size=512, sample_rate=44100):
         """Generate spectrogram using custom FFT"""
+        # Ensure signal length is sufficient
+        if len(signal) < window_size:
+            signal = np.pad(signal, (0, window_size - len(signal)))
+        
         num_frames = (len(signal) - window_size) // hop_size + 1
         spectrogram = []
         
@@ -56,7 +85,8 @@ class SignalProcessor:
             start = i * hop_size
             end = start + window_size
             window = signal[start:end] * np.hanning(window_size)
-            fft_frame = np.abs(SignalProcessor.custom_fft(window))[:window_size//2]
-            spectrogram.append(fft_frame)
+            fft_frame = np.abs(SignalProcessor.custom_fft(window))
+            magnitude = np.abs(fft_frame[:window_size // 2])
+            spectrogram.append(magnitude)
         
         return np.array(spectrogram).T
