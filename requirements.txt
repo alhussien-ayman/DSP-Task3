@@ -1,0 +1,28 @@
+# === Web Framework ===
+Flask==3.0.3
+Flask-CORS==4.0.1
+
+# === Scientific Computing & DSP ===
+numpy==1.26.4
+scipy==1.11.4
+librosa==0.10.2.post1
+resampy==0.4.3
+pywavelets==1.6.0     # (pywt replacement)
+
+# === Audio Processing ===
+pydub==0.25.1
+soundfile==0.12.1
+audioread==3.0.1
+webrtcvad==2.0.10
+
+# === Machine Learning & Utilities ===
+scikit-learn==1.5.2
+joblib==1.4.2
+
+# === Image & File Handling ===
+Pillow==10.3.0
+python-magic==0.4.27
+python-dateutil==2.9.0.post0
+
+# === Development & Testing ===
+pytest==8.3.3
