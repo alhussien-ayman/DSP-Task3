@@ -7,7 +7,7 @@ import io
 from blueprints.instruments_mode import instruments_bp
 from blueprints.animals_mode import animals_bp
 from blueprints.voices_mode import voices_bp
-from blueprints.ai_comparison import ai_bp
+from blueprints.ai_comparison import ai_comparison_bp
 
 # Import utilities
 from utils.audio_utils import AudioUtils
@@ -19,7 +19,7 @@ CORS(app)
 app.register_blueprint(instruments_bp, url_prefix='/api/instruments')
 app.register_blueprint(animals_bp, url_prefix='/api/animals')
 app.register_blueprint(voices_bp, url_prefix='/api/voices')
-app.register_blueprint(ai_bp, url_prefix='/api/ai')
+app.register_blueprint(ai_comparison_bp, url_prefix='/api/ai')
 
 @app.route('/')
 def home():
