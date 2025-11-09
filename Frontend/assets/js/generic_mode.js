@@ -56,9 +56,8 @@ class GenericEqualizer {
         this.selectedBand = null;
         this.startFreqSlider = null;
         this.endFreqSlider = null;
-        
         this.selectedGainSlider = null;
-this.applyGainButton = null;
+        this.applyGainButton = null;
 
         console.log('🎵 GenericEqualizer initialized');
     }
@@ -73,56 +72,56 @@ this.applyGainButton = null;
         this.initializeBandSelection();
     }
 
-initializeBandSelection() {
-    console.log('🎯 Initializing band selection...');
-    
-    // Get slider elements
-    this.startFreqSlider = document.querySelector('.start-freq-slider');
-    this.endFreqSlider = document.querySelector('.end-freq-slider');
-    this.selectedGainSlider = document.querySelector('.selected-gain-slider');
-    this.applyGainButton = document.getElementById('applyGain');
-    
-    // Add event listeners for band selection sliders
-    if (this.startFreqSlider && this.endFreqSlider) {
-        this.startFreqSlider.addEventListener('input', (e) => {
-            this.updateSelectedBandRange('start', parseInt(e.target.value));
-        });
+    initializeBandSelection() {
+        console.log('🎯 Initializing band selection...');
         
-        this.endFreqSlider.addEventListener('input', (e) => {
-            this.updateSelectedBandRange('end', parseInt(e.target.value));
-        });
+        // Get slider elements
+        this.startFreqSlider = document.querySelector('.start-freq-slider');
+        this.endFreqSlider = document.querySelector('.end-freq-slider');
+        this.selectedGainSlider = document.querySelector('.selected-gain-slider');
+        this.applyGainButton = document.getElementById('applyGain');
+        
+        // Add event listeners for band selection sliders
+        if (this.startFreqSlider && this.endFreqSlider) {
+            this.startFreqSlider.addEventListener('input', (e) => {
+                this.updateSelectedBandRange('start', parseInt(e.target.value));
+            });
+            
+            this.endFreqSlider.addEventListener('input', (e) => {
+                this.updateSelectedBandRange('end', parseInt(e.target.value));
+            });
+        }
+        
+        // Add event listener for selected gain slider
+        if (this.selectedGainSlider) {
+            this.selectedGainSlider.addEventListener('input', (e) => {
+                this.updateSelectedGainUI(parseFloat(e.target.value));
+            });
+        }
+        
+        // Add event listener for apply gain button
+        if (this.applyGainButton) {
+            this.applyGainButton.addEventListener('click', () => {
+                this.applySelectedGain();
+            });
+        }
+        
+        // Add event listeners for gain presets
+        this.initializeGainPresets();
+        
+        console.log('✅ Band selection initialized');
     }
-    
-    // Add event listener for selected gain slider
-    if (this.selectedGainSlider) {
-        this.selectedGainSlider.addEventListener('input', (e) => {
-            this.updateSelectedGainUI(parseFloat(e.target.value));
-        });
-    }
-    
-    // Add event listener for apply gain button
-    if (this.applyGainButton) {
-        this.applyGainButton.addEventListener('click', () => {
-            this.applySelectedGain();
-        });
-    }
-    
-    // Add event listeners for gain presets
-    this.initializeGainPresets();
-    
-    console.log('✅ Band selection initialized');
-}
 
-// Add this new method for gain presets
-initializeGainPresets() {
-    const gainPresetButtons = document.querySelectorAll('.gain-preset');
-    gainPresetButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            const gain = parseFloat(e.target.dataset.gain);
-            this.setSelectedGain(gain);
+    initializeGainPresets() {
+        const gainPresetButtons = document.querySelectorAll('.gain-preset');
+        gainPresetButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const gain = parseFloat(e.target.dataset.gain);
+                this.setSelectedGain(gain);
+            });
         });
-    });
-}
+    }
+
     // Band Selection Methods
     selectBand(bandId) {
         // Deselect previously selected band
@@ -147,152 +146,145 @@ initializeGainPresets() {
         }
     }
 
-   // Update updateBandSelectionUI method
-updateBandSelectionUI() {
-    if (!this.selectedBand) return;
-    
-    // Show selection UI
-    const selectedBandInfo = document.getElementById('selectedBandInfo');
-    const bandRangeControls = document.getElementById('bandRangeControls');
-    const selectedGainControls = document.getElementById('selectedGainControls');
-    
-    if (selectedBandInfo && bandRangeControls && selectedGainControls) {
-        selectedBandInfo.style.display = 'block';
-        bandRangeControls.style.display = 'block';
-        selectedGainControls.style.display = 'block';
+    updateBandSelectionUI() {
+        if (!this.selectedBand) return;
         
-        // Update displayed values
-        document.getElementById('selectedStartFreq').textContent = `${this.selectedBand.startFreq} Hz`;
-        document.getElementById('selectedEndFreq').textContent = `${this.selectedBand.endFreq} Hz`;
+        // Show selection UI
+        const selectedBandInfo = document.getElementById('selectedBandInfo');
+        const bandRangeControls = document.getElementById('bandRangeControls');
+        const selectedGainControls = document.getElementById('selectedGainControls');
         
-        // Update sliders
-        if (this.startFreqSlider && this.endFreqSlider) {
-            this.startFreqSlider.value = this.selectedBand.startFreq;
-            this.endFreqSlider.value = this.selectedBand.endFreq;
+        if (selectedBandInfo && bandRangeControls && selectedGainControls) {
+            selectedBandInfo.style.display = 'block';
+            bandRangeControls.style.display = 'block';
+            selectedGainControls.style.display = 'block';
             
-            document.getElementById('startFreqValue').textContent = `${this.selectedBand.startFreq} Hz`;
-            document.getElementById('endFreqValue').textContent = `${this.selectedBand.endFreq} Hz`;
+            // Update displayed values
+            document.getElementById('selectedStartFreq').textContent = `${this.selectedBand.startFreq} Hz`;
+            document.getElementById('selectedEndFreq').textContent = `${this.selectedBand.endFreq} Hz`;
+            
+            // Update sliders
+            if (this.startFreqSlider && this.endFreqSlider) {
+                this.startFreqSlider.value = this.selectedBand.startFreq;
+                this.endFreqSlider.value = this.selectedBand.endFreq;
+                
+                document.getElementById('startFreqValue').textContent = `${this.selectedBand.startFreq} Hz`;
+                document.getElementById('endFreqValue').textContent = `${this.selectedBand.endFreq} Hz`;
+            }
+            
+            // Update gain slider and display
+            this.updateGainUI();
+            
+            // Update frequency visualization
+            this.updateFrequencyVisualization();
+        }
+    }
+
+    updateGainUI() {
+        if (!this.selectedBand || !this.selectedGainSlider) return;
+        
+        // Update gain slider value
+        this.selectedGainSlider.value = this.selectedBand.gain;
+        
+        // Update gain display
+        this.updateSelectedGainUI(this.selectedBand.gain);
+        
+        // Update gain preset buttons
+        this.updateGainPresetButtons();
+    }
+
+    updateSelectedGainUI(gain) {
+        const gainValueElement = document.getElementById('selectedGainValue');
+        if (!gainValueElement) return;
+        
+        gainValueElement.textContent = gain.toFixed(1);
+        
+        // Update color based on gain value
+        gainValueElement.className = 'gain-value-badge';
+        if (gain < 0.8) {
+            gainValueElement.classList.add('gain-mute');
+        } else if (gain > 1.2) {
+            gainValueElement.classList.add('gain-boost');
+        } else {
+            gainValueElement.classList.add('gain-normal');
+        }
+    }
+
+    updateGainPresetButtons() {
+        if (!this.selectedBand) return;
+        
+        const gainPresetButtons = document.querySelectorAll('.gain-preset');
+        gainPresetButtons.forEach(button => {
+            const presetGain = parseFloat(button.dataset.gain);
+            button.classList.remove('active');
+            
+            // Check if this preset matches the current gain (with some tolerance)
+            if (Math.abs(this.selectedBand.gain - presetGain) < 0.05) {
+                button.classList.add('active');
+            }
+        });
+    }
+
+    setSelectedGain(gain) {
+        if (!this.selectedBand) return;
+        
+        // Update gain slider
+        if (this.selectedGainSlider) {
+            this.selectedGainSlider.value = gain;
         }
         
-        // Update gain slider and display
-        this.updateGainUI();
-        
-        // Update frequency visualization
-        this.updateFrequencyVisualization();
+        // Update UI
+        this.updateSelectedGainUI(gain);
+        this.updateGainPresetButtons();
     }
-}
 
-// Add this new method to update gain UI
-updateGainUI() {
-    if (!this.selectedBand || !this.selectedGainSlider) return;
-    
-    // Update gain slider value
-    this.selectedGainSlider.value = this.selectedBand.gain;
-    
-    // Update gain display
-    this.updateSelectedGainUI(this.selectedBand.gain);
-    
-    // Update gain preset buttons
-    this.updateGainPresetButtons();
-}
-
-// Add this new method to update gain display
-updateSelectedGainUI(gain) {
-    const gainValueElement = document.getElementById('selectedGainValue');
-    if (!gainValueElement) return;
-    
-    gainValueElement.textContent = gain.toFixed(1);
-    
-    // Update color based on gain value
-    gainValueElement.className = 'gain-value-badge';
-    if (gain < 0.8) {
-        gainValueElement.classList.add('gain-mute');
-    } else if (gain > 1.2) {
-        gainValueElement.classList.add('gain-boost');
-    } else {
-        gainValueElement.classList.add('gain-normal');
-    }
-}
-
-// Add this new method to update gain preset buttons
-updateGainPresetButtons() {
-    if (!this.selectedBand) return;
-    
-    const gainPresetButtons = document.querySelectorAll('.gain-preset');
-    gainPresetButtons.forEach(button => {
-        const presetGain = parseFloat(button.dataset.gain);
-        button.classList.remove('active');
+    applySelectedGain() {
+        if (!this.selectedBand || !this.selectedGainSlider) return;
         
-        // Check if this preset matches the current gain (with some tolerance)
-        if (Math.abs(this.selectedBand.gain - presetGain) < 0.05) {
-            button.classList.add('active');
-        }
-    });
-}
-
-// Add this new method to set selected gain
-setSelectedGain(gain) {
-    if (!this.selectedBand) return;
-    
-    // Update gain slider
-    if (this.selectedGainSlider) {
-        this.selectedGainSlider.value = gain;
-    }
-    
-    // Update UI
-    this.updateSelectedGainUI(gain);
-    this.updateGainPresetButtons();
-}
-
-// Add this new method to apply gain changes
-applySelectedGain() {
-    if (!this.selectedBand || !this.selectedGainSlider) return;
-    
-    const newGain = parseFloat(this.selectedGainSlider.value);
-    
-    // Update the selected band's gain
-    this.selectedBand.gain = newGain;
-    
-    // Update the band display
-    this.updateBandGainDisplay(this.selectedBand.id);
-    
-    // Update frequency chart
-    this.updateFrequencyChart();
-    
-    // Show notification
-    this.showNotification(`Gain applied: ${newGain.toFixed(1)}× to ${this.selectedBand.startFreq}-${this.selectedBand.endFreq}Hz band`, 'success');
-    
-    console.log(`🔊 Gain applied: ${newGain.toFixed(1)}× to selected band`);
-}
-
-// Add this new method to update band gain display
-updateBandGainDisplay(bandId) {
-    const band = this.bands.find(b => b.id === bandId);
-    if (!band) return;
-    
-    const bandElement = document.querySelector(`[data-band-id="${bandId}"]`);
-    if (bandElement) {
-        const gainValue = bandElement.querySelector('.gain-value');
-        const gainSlider = bandElement.querySelector('.gain-slider');
+        const newGain = parseFloat(this.selectedGainSlider.value);
         
-        if (gainValue) {
-            gainValue.textContent = band.gain.toFixed(1);
+        // Update the selected band's gain
+        this.selectedBand.gain = newGain;
+        
+        // Update the band display
+        this.updateBandGainDisplay(this.selectedBand.id);
+        
+        // Update frequency chart
+        this.updateFrequencyChart();
+        
+        // Show notification
+        this.showNotification(`Gain applied: ${newGain.toFixed(1)}× to ${this.selectedBand.startFreq}-${this.selectedBand.endFreq}Hz band`, 'success');
+        
+        console.log(`🔊 Gain applied: ${newGain.toFixed(1)}× to selected band`);
+    }
+
+    updateBandGainDisplay(bandId) {
+        const band = this.bands.find(b => b.id === bandId);
+        if (!band) return;
+        
+        const bandElement = document.querySelector(`[data-band-id="${bandId}"]`);
+        if (bandElement) {
+            const gainValue = bandElement.querySelector('.gain-value');
+            const gainSlider = bandElement.querySelector('.gain-slider');
             
-            // Update color based on gain value
-            if (band.gain > 1.0) {
-                gainValue.style.background = '#28a745';
-            } else if (band.gain < 1.0) {
-                gainValue.style.background = '#dc3545';
-            } else {
-                gainValue.style.background = 'var(--accent-color)';
+            if (gainValue) {
+                gainValue.textContent = band.gain.toFixed(1);
+                
+                // Update color based on gain value
+                if (band.gain > 1.0) {
+                    gainValue.style.background = '#28a745';
+                } else if (band.gain < 1.0) {
+                    gainValue.style.background = '#dc3545';
+                } else {
+                    gainValue.style.background = 'var(--accent-color)';
+                }
+            }
+            
+            if (gainSlider) {
+                gainSlider.value = band.gain;
             }
         }
-        
-        if (gainSlider) {
-            gainSlider.value = band.gain;
-        }
     }
-}
 
     updateSelectedBandRange(type, value) {
         if (!this.selectedBand) return;
@@ -377,26 +369,26 @@ updateBandGainDisplay(bandId) {
     }
 
     deselectBand() {
-    if (this.selectedBand) {
-        const bandElement = document.querySelector(`[data-band-id="${this.selectedBand.id}"]`);
-        if (bandElement) {
-            bandElement.classList.remove('selected');
-        }
-        
-        this.selectedBand = null;
-        
-        // Hide selection UI
-        const selectedBandInfo = document.getElementById('selectedBandInfo');
-        const bandRangeControls = document.getElementById('bandRangeControls');
-        const selectedGainControls = document.getElementById('selectedGainControls');
-        
-        if (selectedBandInfo && bandRangeControls && selectedGainControls) {
-            selectedBandInfo.style.display = 'none';
-            bandRangeControls.style.display = 'none';
-            selectedGainControls.style.display = 'none';
+        if (this.selectedBand) {
+            const bandElement = document.querySelector(`[data-band-id="${this.selectedBand.id}"]`);
+            if (bandElement) {
+                bandElement.classList.remove('selected');
+            }
+            
+            this.selectedBand = null;
+            
+            // Hide selection UI
+            const selectedBandInfo = document.getElementById('selectedBandInfo');
+            const bandRangeControls = document.getElementById('bandRangeControls');
+            const selectedGainControls = document.getElementById('selectedGainControls');
+            
+            if (selectedBandInfo && bandRangeControls && selectedGainControls) {
+                selectedBandInfo.style.display = 'none';
+                bandRangeControls.style.display = 'none';
+                selectedGainControls.style.display = 'none';
+            }
         }
     }
-}
 
     initializeAudioContext() {
         try {
