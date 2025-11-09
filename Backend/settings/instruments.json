@@ -1,0 +1,51 @@
+{
+  "sliders": [
+    {
+      "name": "Flute",
+      "frequency_bands": [
+        [552, 558],
+        [985, 991],
+        [1105, 1113]
+      ],
+      "description": "Woodwind instrument with clear, pure tones"
+    },
+    {
+      "name": "Guitar",
+      "frequency_bands": [
+        [218, 219],
+        [261, 262],
+        [292, 294],
+        [391, 394],
+        [523, 526],
+        [588, 590],
+        [785, 787]
+      ],
+      "description": "String instrument with multiple frequency bands"
+    },
+    {
+      "name": "Piano",
+      "frequency_bands": [
+        [90, 92],
+        [110, 115],
+        [130, 135],
+        [160, 170],
+        [190, 210],
+        [240, 260],
+        [280, 300],
+        [340, 360],
+        [380, 400]
+      ],
+      "description": "Keyboard instrument with harmonic complexity across wide frequency range"
+    },
+    {
+      "name": "Triangle",
+      "frequency_bands": [
+        [3468, 3470],
+        [5624, 5624],
+        [6515, 6519],
+        [7655, 7662]
+      ],
+      "description": "Percussion instrument with high-frequency metallic tones"
+    }
+  ]
+}
