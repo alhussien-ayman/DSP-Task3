@@ -7,12 +7,22 @@
     padding: 40px 0;
 }
 
-.control-panel {
+/* Top Controls Panel */
+.control-panel-top {
     background: var(--surface-color);
     padding: 25px;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     margin-bottom: 20px;
+    border: 1px solid color-mix(in srgb, var(--default-color), transparent 90%);
+}
+
+/* Side Controls Panel */
+.control-panel-side {
+    background: var(--surface-color);
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     height: fit-content;
     position: sticky;
     top: 100px;
@@ -46,86 +56,233 @@
 
 .bands-container {
     margin-bottom: 25px;
-    max-height: 400px;
+    max-height: 600px;
     overflow-y: auto;
     padding-right: 10px;
 }
 
+/* Enhanced Band Control Styles */
 .band-control {
     background: color-mix(in srgb, var(--surface-color), transparent 20%);
-    padding: 15px;
-    margin-bottom: 15px;
-    border-radius: 8px;
-    border-left: 4px solid var(--accent-color);
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    border-left: 6px solid var(--accent-color);
     transition: all 0.3s ease;
     border: 1px solid color-mix(in srgb, var(--default-color), transparent 85%);
+    position: relative;
 }
 
 .band-control:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    transform: translateY(-3px);
+    border-left-width: 8px;
 }
 
 .band-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid color-mix(in srgb, var(--default-color), transparent 80%);
 }
 
 .band-header h6 {
     margin: 0;
     color: var(--heading-color);
     font-weight: 600;
+    font-size: 1.1rem;
 }
 
 .band-controls {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
-.control-group {
-    margin-bottom: 10px;
+/* Enhanced Frequency Range Control */
+.frequency-range-control {
+    background: color-mix(in srgb, var(--background-color), transparent 20%);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--default-color), transparent 80%);
 }
 
-.control-group label {
+.frequency-range-control label {
     display: block;
-    margin-bottom: 5px;
-    font-weight: 500;
+    margin-bottom: 12px;
+    font-weight: 600;
+    color: var(--heading-color);
+    font-size: 1rem;
+}
+
+.freq-display {
+    background: var(--accent-color);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
     font-size: 0.9rem;
-    color: color-mix(in srgb, var(--default-color), transparent 20%);
+    font-weight: 500;
 }
 
-.control-group input {
+/* Enhanced Range Slider */
+.range-slider-container {
+    position: relative;
+    margin: 20px 0;
+}
+
+.freq-range {
     width: 100%;
-    padding: 8px 12px;
-    border: 1px solid color-mix(in srgb, var(--default-color), transparent 70%);
-    border-radius: 4px;
-    background: var(--background-color);
-    color: var(--default-color);
-    transition: border-color 0.3s;
+    height: 40px;
+    background: transparent;
+    outline: none;
+    -webkit-appearance: none;
 }
 
-.control-group input:focus {
+.freq-range::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 8px;
+    background: linear-gradient(90deg, #e03a3c, #17a2b8, #28a745, #ffc107, #6f42c1);
+    border-radius: 10px;
+    border: none;
+}
+
+.freq-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 24px;
+    height: 24px;
+    background: var(--accent-color);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    transition: all 0.2s ease;
+    margin-top: -8px;
+}
+
+.freq-range::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+
+.freq-range::-moz-range-track {
+    width: 100%;
+    height: 8px;
+    background: linear-gradient(90deg, #e03a3c, #17a2b8, #28a745, #ffc107, #6f42c1);
+    border-radius: 10px;
+    border: none;
+}
+
+.freq-range::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    background: var(--accent-color);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.range-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 0.8rem;
+    color: color-mix(in srgb, var(--default-color), transparent 30%);
+}
+
+/* Enhanced Gain Control */
+.gain-control {
+    background: color-mix(in srgb, var(--background-color), transparent 20%);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--default-color), transparent 80%);
+}
+
+.gain-control label {
+    display: block;
+    margin-bottom: 12px;
+    font-weight: 600;
+    color: var(--heading-color);
+    font-size: 1rem;
+}
+
+.gain-slider-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin: 15px 0;
+}
+
+.gain-slider {
+    flex: 1;
+    height: 8px;
+    background: linear-gradient(90deg, #dc3545, #ffc107, #28a745);
+    border-radius: 10px;
     outline: none;
-    border-color: var(--accent-color);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-color), transparent 80%);
+    -webkit-appearance: none;
+}
+
+.gain-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--accent-color);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    transition: all 0.2s ease;
+}
+
+.gain-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.gain-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: var(--accent-color);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.gain-value {
+    background: var(--accent-color);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    min-width: 50px;
+    text-align: center;
+    font-size: 1rem;
+}
+
+.gain-labels {
+    font-size: 0.8rem;
+    color: color-mix(in srgb, var(--default-color), transparent 30%);
 }
 
 .remove-band {
     background: #dc3545;
     color: white;
     border: none;
-    padding: 6px 12px;
-    border-radius: 4px;
+    padding: 8px 16px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 0.8rem;
-    transition: background-color 0.3s;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
 .remove-band:hover {
     background: #c82333;
+    transform: scale(1.05);
 }
 
 .preset-controls, .processing-controls {
@@ -134,7 +291,7 @@
 
 .visualization-panel {
     background: var(--surface-color);
-    padding: 30px; /* Increased padding */
+    padding: 30px;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     border: 1px solid color-mix(in srgb, var(--default-color), transparent 90%);
@@ -211,7 +368,7 @@
 }
 
 .cine-viewer {
-    height: 300px !important; /* Increased from 250px to 300px */
+    height: 300px !important;
     margin-bottom: 10px;
     background: var(--surface-color);
     border-radius: 6px;
@@ -219,14 +376,14 @@
 }
 
 .spectrogram-plot {
-    height: 400px !important; /* Increased from 280px to 400px */
+    height: 400px !important;
     background: var(--surface-color);
     border-radius: 6px;
     border: 1px solid color-mix(in srgb, var(--default-color), transparent 80%);
 }
 
 .spectrum-plot {
-    height: 350px !important; /* Increased from 280px to 350px */
+    height: 350px !important;
     background: var(--surface-color);
     border-radius: 6px;
     border: 1px solid color-mix(in srgb, var(--default-color), transparent 80%);
@@ -507,7 +664,7 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .control-panel {
+    .control-panel-side {
         position: static;
         margin-bottom: 30px;
     }
@@ -590,7 +747,7 @@
         padding: 20px 0;
     }
     
-    .control-panel, .visualization-panel {
+    .control-panel-top, .control-panel-side, .visualization-panel {
         padding: 15px;
     }
     
@@ -599,7 +756,7 @@
     }
     
    .cine-viewer {
-        height: 300px !important; /* Slightly larger on mobile too */
+        height: 300px !important;
     }
     .spectrum-plot {
         height: 200px !important;
@@ -920,91 +1077,6 @@
     border-left-color: #ffc107;
 }
 
-/* Size Adjustments - Make controller bigger and graphs smaller */
-@media (min-width: 992px) {
-    .equalizer-interface .col-lg-4 {
-        flex: 0 0 40%;
-        max-width: 40%;
-    }
-    
-    .equalizer-interface .col-lg-8 {
-        flex: 0 0 60%;
-        max-width: 60%;
-    }
-}
-
-/* Make control panel bigger */
-.control-panel {
-    background: var(--surface-color);
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
-    height: fit-content;
-    position: sticky;
-    top: 100px;
-    font-size: 1rem;
-}
-
-.control-panel .form-label {
-    font-size: 0.95rem;
-}
-
-.control-panel .form-control,
-.control-panel .form-select {
-    padding: 10px 14px;
-    font-size: 0.95rem;
-}
-
-/* Compact visualization sections */
-.signal-viewers-section,
-.frequency-spectrum-section,
-.spectrograms-section {
-    margin-bottom: 25px;
-}
-
-.section-header h4 {
-    font-size: 1.1rem;
-    margin-bottom: 0;
-}
-
-.section-header h5 {
-    font-size: 1rem;
-    margin-bottom: 0;
-}
-
-/* Adjust viewer controls */
-.viewer-controls {
-    margin-top: 8px;
-}
-
-.viewer-time-info {
-    font-size: 0.85rem;
-}
-
-/* Compact chart wrappers */
-.chart-wrapper {
-    padding: 12px;
-}
-
-.chart-wrapper canvas {
-    height: 200px !important;
-}
-
-/* Responsive adjustments */
-@media (max-width: 991px) {
-    .equalizer-interface .col-lg-4,
-    .equalizer-interface .col-lg-8 {
-        flex: 0 0 100%;
-        max-width: 100%;
-    }
-    
-    .control-panel {
-        position: static;
-        margin-bottom: 30px;
-    }
-}
-
 /* Color coding for different sections */
 .viewer-stack .graph-box:first-child {
     border-left: 4px solid #e03a3c;
@@ -1037,4 +1109,406 @@
 .form-select:focus {
     outline: 2px solid color-mix(in srgb, var(--accent-color), transparent 50%);
     outline-offset: 2px;
+}
+
+/* Enhanced Band Interaction */
+.band-control.dragging {
+    transform: scale(1.02);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+    z-index: 10;
+}
+
+.band-control.active {
+    border-left-color: var(--accent-color);
+    background: color-mix(in srgb, var(--accent-color), transparent 95%);
+}
+
+/* Processing Controls Section */
+.processing-controls-section {
+    background: color-mix(in srgb, var(--surface-color), transparent 20%);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--default-color), transparent 85%);
+}
+
+.processing-controls-section .section-header {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+}
+
+/* Improved slider thumb for better UX */
+input[type="range"]::-webkit-slider-thumb {
+    cursor: grab;
+}
+
+input[type="range"]::-webkit-slider-thumb:active {
+    cursor: grabbing;
+    transform: scale(1.3);
+}
+
+/* Band frequency visualization */
+.band-frequency-visual {
+    height: 4px;
+    background: linear-gradient(90deg, #e03a3c, #17a2b8, #28a745, #ffc107, #6f42c1);
+    border-radius: 2px;
+    margin: 10px 0;
+    position: relative;
+}
+
+.band-frequency-marker {
+    position: absolute;
+    top: -3px;
+    width: 10px;
+    height: 10px;
+    background: white;
+    border: 2px solid var(--accent-color);
+    border-radius: 50%;
+    transform: translateX(-50%);
+}
+
+
+/* Add these new styles to your existing CSS file */
+
+/* Band Selection Section */
+.band-selection-section {
+    background: color-mix(in srgb, var(--surface-color), transparent 20%);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--default-color), transparent 85%);
+    margin-bottom: 20px;
+}
+
+.selected-band-info {
+    background: linear-gradient(135deg, var(--accent-color), color-mix(in srgb, var(--accent-color), transparent 30%)) !important;
+    color: white;
+    border: none;
+}
+
+.selected-band-info h6 {
+    color: white;
+    margin-bottom: 10px;
+}
+
+.band-range-controls {
+    background: color-mix(in srgb, var(--background-color), transparent 20%);
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--default-color), transparent 80%);
+}
+
+.range-input-group {
+    margin-bottom: 15px;
+}
+
+.range-input-group label {
+    font-weight: 600;
+    margin-bottom: 10px;
+    display: block;
+    color: var(--heading-color);
+}
+
+.range-value-display {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.range-value {
+    background: var(--accent-color);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Enhanced Range Sliders for Band Selection */
+.start-freq-slider, .end-freq-slider {
+    width: 100%;
+    height: 25px;
+    background: transparent;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.start-freq-slider::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 8px;
+    background: linear-gradient(90deg, #e03a3c, #17a2b8);
+    border-radius: 10px;
+    border: none;
+}
+
+.end-freq-slider::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 8px;
+    background: linear-gradient(90deg, #17a2b8, #28a745);
+    border-radius: 10px;
+    border: none;
+}
+
+.start-freq-slider::-webkit-slider-thumb,
+.end-freq-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid var(--accent-color);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    transition: all 0.2s ease;
+}
+
+.start-freq-slider::-webkit-slider-thumb {
+    border-color: #e03a3c;
+}
+
+.end-freq-slider::-webkit-slider-thumb {
+    border-color: #28a745;
+}
+
+.start-freq-slider::-webkit-slider-thumb:hover,
+.end-freq-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+/* Frequency Visualization */
+.frequency-visualization {
+    margin-top: 20px;
+}
+
+.freq-visual-bar {
+    background: color-mix(in srgb, var(--background-color), transparent 20%);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--default-color), transparent 80%);
+}
+
+.freq-visual-track {
+    width: 100%;
+    height: 20px;
+    background: linear-gradient(90deg, #e03a3c, #17a2b8, #28a745, #ffc107, #6f42c1);
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.freq-visual-range {
+    position: absolute;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.3);
+    border: 2px solid white;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+}
+
+.freq-labels {
+    font-size: 0.8rem;
+    color: color-mix(in srgb, var(--default-color), transparent 30%);
+}
+
+/* Enhanced Band Selection States */
+.band-control.selectable {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.band-control.selectable:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.band-control.selected {
+    border-left-color: var(--accent-color) !important;
+    border-left-width: 8px;
+    background: color-mix(in srgb, var(--accent-color), transparent 95%);
+    box-shadow: 0 8px 25px rgba(224, 58, 60, 0.3);
+    transform: translateY(-2px);
+}
+
+.band-control.selected .band-header h6 {
+    color: var(--accent-color);
+}
+
+/* Band Selection Animation */
+@keyframes pulse-selected {
+    0% { box-shadow: 0 0 0 0 rgba(224, 58, 60, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(224, 58, 60, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(224, 58, 60, 0); }
+}
+
+.band-control.selected {
+    animation: pulse-selected 2s infinite;
+}
+
+/* Responsive Design for Band Selection */
+@media (max-width: 768px) {
+    .band-selection-section {
+        padding: 15px;
+    }
+    
+    .band-range-controls {
+        padding: 15px;
+    }
+    
+    .range-input-group {
+        margin-bottom: 12px;
+    }
+}
+
+/* Enhanced Visual Feedback */
+.band-control .band-header {
+    position: relative;
+}
+
+.band-control.selected .band-header::after {
+    content: "✓";
+    position: absolute;
+    right: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--accent-color);
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* Smooth Transitions */
+.band-control,
+.freq-visual-range,
+.range-value {
+    transition: all 0.3s ease;
+}
+
+/* Focus States for Accessibility */
+.start-freq-slider:focus,
+.end-freq-slider:focus {
+    outline: 2px solid color-mix(in srgb, var(--accent-color), transparent 50%);
+    outline-offset: 2px;
+}
+
+/* Band Selection Instructions */
+.band-selection-instructions {
+    text-align: center;
+    padding: 10px;
+    background: color-mix(in srgb, var(--surface-color), transparent 50%);
+    border-radius: 6px;
+    margin-bottom: 15px;
+}
+
+.band-selection-instructions small {
+    color: color-mix(in srgb, var(--default-color), transparent 30%);
+    font-style: italic;
+}
+
+
+
+
+/* Selected Band Gain Controls */
+.selected-gain-controls {
+    background: color-mix(in srgb, var(--background-color), transparent 20%);
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--default-color), transparent 80%);
+}
+
+.gain-control-group {
+    margin-bottom: 15px;
+}
+
+.selected-gain-slider {
+    width: 100%;
+    height: 25px;
+    background: transparent;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.selected-gain-slider::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 8px;
+    background: linear-gradient(90deg, #dc3545, #ffc107, #28a745);
+    border-radius: 10px;
+    border: none;
+}
+
+.selected-gain-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid var(--accent-color);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    transition: all 0.2s ease;
+}
+
+.selected-gain-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.gain-value-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.gain-value-badge {
+    background: var(--accent-color);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    min-width: 60px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.gain-multiplier {
+    font-size: 1rem;
+    color: color-mix(in srgb, var(--default-color), transparent 30%);
+    font-weight: 500;
+}
+
+/* Gain value colors based on value */
+.gain-value-badge.gain-mute {
+    background: #dc3545;
+}
+
+.gain-value-badge.gain-normal {
+    background: var(--accent-color);
+}
+
+.gain-value-badge.gain-boost {
+    background: #28a745;
+}
+
+.gain-presets .btn-group {
+    gap: 2px;
+}
+
+.gain-presets .btn {
+    flex: 1;
+}
+
+.gain-presets .btn.active {
+    background: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+
+.apply-controls .btn {
+    padding: 10px;
+    font-weight: 600;
 }

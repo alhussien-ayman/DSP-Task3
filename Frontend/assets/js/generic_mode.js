@@ -52,6 +52,14 @@ class GenericEqualizer {
         // Current preset
         this.currentPreset = null;
         
+        // Band selection
+        this.selectedBand = null;
+        this.startFreqSlider = null;
+        this.endFreqSlider = null;
+        
+        this.selectedGainSlider = null;
+this.applyGainButton = null;
+
         console.log('🎵 GenericEqualizer initialized');
     }
 
@@ -62,7 +70,333 @@ class GenericEqualizer {
         this.loadPresetsList();
         this.testBackendConnection();
         this.initializeAudioContext();
+        this.initializeBandSelection();
     }
+
+initializeBandSelection() {
+    console.log('🎯 Initializing band selection...');
+    
+    // Get slider elements
+    this.startFreqSlider = document.querySelector('.start-freq-slider');
+    this.endFreqSlider = document.querySelector('.end-freq-slider');
+    this.selectedGainSlider = document.querySelector('.selected-gain-slider');
+    this.applyGainButton = document.getElementById('applyGain');
+    
+    // Add event listeners for band selection sliders
+    if (this.startFreqSlider && this.endFreqSlider) {
+        this.startFreqSlider.addEventListener('input', (e) => {
+            this.updateSelectedBandRange('start', parseInt(e.target.value));
+        });
+        
+        this.endFreqSlider.addEventListener('input', (e) => {
+            this.updateSelectedBandRange('end', parseInt(e.target.value));
+        });
+    }
+    
+    // Add event listener for selected gain slider
+    if (this.selectedGainSlider) {
+        this.selectedGainSlider.addEventListener('input', (e) => {
+            this.updateSelectedGainUI(parseFloat(e.target.value));
+        });
+    }
+    
+    // Add event listener for apply gain button
+    if (this.applyGainButton) {
+        this.applyGainButton.addEventListener('click', () => {
+            this.applySelectedGain();
+        });
+    }
+    
+    // Add event listeners for gain presets
+    this.initializeGainPresets();
+    
+    console.log('✅ Band selection initialized');
+}
+
+// Add this new method for gain presets
+initializeGainPresets() {
+    const gainPresetButtons = document.querySelectorAll('.gain-preset');
+    gainPresetButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            const gain = parseFloat(e.target.dataset.gain);
+            this.setSelectedGain(gain);
+        });
+    });
+}
+    // Band Selection Methods
+    selectBand(bandId) {
+        // Deselect previously selected band
+        if (this.selectedBand) {
+            const prevBandElement = document.querySelector(`[data-band-id="${this.selectedBand.id}"]`);
+            if (prevBandElement) {
+                prevBandElement.classList.remove('selected');
+            }
+        }
+        
+        // Select new band
+        this.selectedBand = this.bands.find(b => b.id === bandId);
+        
+        if (this.selectedBand) {
+            const bandElement = document.querySelector(`[data-band-id="${bandId}"]`);
+            if (bandElement) {
+                bandElement.classList.add('selected');
+            }
+            
+            this.updateBandSelectionUI();
+            console.log(`🎯 Band selected: ${this.selectedBand.startFreq}-${this.selectedBand.endFreq}Hz`);
+        }
+    }
+
+   // Update updateBandSelectionUI method
+updateBandSelectionUI() {
+    if (!this.selectedBand) return;
+    
+    // Show selection UI
+    const selectedBandInfo = document.getElementById('selectedBandInfo');
+    const bandRangeControls = document.getElementById('bandRangeControls');
+    const selectedGainControls = document.getElementById('selectedGainControls');
+    
+    if (selectedBandInfo && bandRangeControls && selectedGainControls) {
+        selectedBandInfo.style.display = 'block';
+        bandRangeControls.style.display = 'block';
+        selectedGainControls.style.display = 'block';
+        
+        // Update displayed values
+        document.getElementById('selectedStartFreq').textContent = `${this.selectedBand.startFreq} Hz`;
+        document.getElementById('selectedEndFreq').textContent = `${this.selectedBand.endFreq} Hz`;
+        
+        // Update sliders
+        if (this.startFreqSlider && this.endFreqSlider) {
+            this.startFreqSlider.value = this.selectedBand.startFreq;
+            this.endFreqSlider.value = this.selectedBand.endFreq;
+            
+            document.getElementById('startFreqValue').textContent = `${this.selectedBand.startFreq} Hz`;
+            document.getElementById('endFreqValue').textContent = `${this.selectedBand.endFreq} Hz`;
+        }
+        
+        // Update gain slider and display
+        this.updateGainUI();
+        
+        // Update frequency visualization
+        this.updateFrequencyVisualization();
+    }
+}
+
+// Add this new method to update gain UI
+updateGainUI() {
+    if (!this.selectedBand || !this.selectedGainSlider) return;
+    
+    // Update gain slider value
+    this.selectedGainSlider.value = this.selectedBand.gain;
+    
+    // Update gain display
+    this.updateSelectedGainUI(this.selectedBand.gain);
+    
+    // Update gain preset buttons
+    this.updateGainPresetButtons();
+}
+
+// Add this new method to update gain display
+updateSelectedGainUI(gain) {
+    const gainValueElement = document.getElementById('selectedGainValue');
+    if (!gainValueElement) return;
+    
+    gainValueElement.textContent = gain.toFixed(1);
+    
+    // Update color based on gain value
+    gainValueElement.className = 'gain-value-badge';
+    if (gain < 0.8) {
+        gainValueElement.classList.add('gain-mute');
+    } else if (gain > 1.2) {
+        gainValueElement.classList.add('gain-boost');
+    } else {
+        gainValueElement.classList.add('gain-normal');
+    }
+}
+
+// Add this new method to update gain preset buttons
+updateGainPresetButtons() {
+    if (!this.selectedBand) return;
+    
+    const gainPresetButtons = document.querySelectorAll('.gain-preset');
+    gainPresetButtons.forEach(button => {
+        const presetGain = parseFloat(button.dataset.gain);
+        button.classList.remove('active');
+        
+        // Check if this preset matches the current gain (with some tolerance)
+        if (Math.abs(this.selectedBand.gain - presetGain) < 0.05) {
+            button.classList.add('active');
+        }
+    });
+}
+
+// Add this new method to set selected gain
+setSelectedGain(gain) {
+    if (!this.selectedBand) return;
+    
+    // Update gain slider
+    if (this.selectedGainSlider) {
+        this.selectedGainSlider.value = gain;
+    }
+    
+    // Update UI
+    this.updateSelectedGainUI(gain);
+    this.updateGainPresetButtons();
+}
+
+// Add this new method to apply gain changes
+applySelectedGain() {
+    if (!this.selectedBand || !this.selectedGainSlider) return;
+    
+    const newGain = parseFloat(this.selectedGainSlider.value);
+    
+    // Update the selected band's gain
+    this.selectedBand.gain = newGain;
+    
+    // Update the band display
+    this.updateBandGainDisplay(this.selectedBand.id);
+    
+    // Update frequency chart
+    this.updateFrequencyChart();
+    
+    // Show notification
+    this.showNotification(`Gain applied: ${newGain.toFixed(1)}× to ${this.selectedBand.startFreq}-${this.selectedBand.endFreq}Hz band`, 'success');
+    
+    console.log(`🔊 Gain applied: ${newGain.toFixed(1)}× to selected band`);
+}
+
+// Add this new method to update band gain display
+updateBandGainDisplay(bandId) {
+    const band = this.bands.find(b => b.id === bandId);
+    if (!band) return;
+    
+    const bandElement = document.querySelector(`[data-band-id="${bandId}"]`);
+    if (bandElement) {
+        const gainValue = bandElement.querySelector('.gain-value');
+        const gainSlider = bandElement.querySelector('.gain-slider');
+        
+        if (gainValue) {
+            gainValue.textContent = band.gain.toFixed(1);
+            
+            // Update color based on gain value
+            if (band.gain > 1.0) {
+                gainValue.style.background = '#28a745';
+            } else if (band.gain < 1.0) {
+                gainValue.style.background = '#dc3545';
+            } else {
+                gainValue.style.background = 'var(--accent-color)';
+            }
+        }
+        
+        if (gainSlider) {
+            gainSlider.value = band.gain;
+        }
+    }
+}
+
+    updateSelectedBandRange(type, value) {
+        if (!this.selectedBand) return;
+        
+        if (type === 'start') {
+            // Ensure start frequency is less than end frequency
+            if (value >= this.selectedBand.endFreq) {
+                value = this.selectedBand.endFreq - 10;
+                this.startFreqSlider.value = value;
+            }
+            this.selectedBand.startFreq = value;
+            document.getElementById('startFreqValue').textContent = `${value} Hz`;
+            document.getElementById('selectedStartFreq').textContent = `${value} Hz`;
+        } else if (type === 'end') {
+            // Ensure end frequency is greater than start frequency
+            if (value <= this.selectedBand.startFreq) {
+                value = this.selectedBand.startFreq + 10;
+                this.endFreqSlider.value = value;
+            }
+            this.selectedBand.endFreq = value;
+            document.getElementById('endFreqValue').textContent = `${value} Hz`;
+            document.getElementById('selectedEndFreq').textContent = `${value} Hz`;
+        }
+        
+        // Update bandwidth
+        this.selectedBand.bandwidth = this.selectedBand.endFreq - this.selectedBand.startFreq;
+        
+        // Update the band display
+        this.updateBandDisplay(this.selectedBand.id);
+        
+        // Update frequency visualization
+        this.updateFrequencyVisualization();
+        
+        // Update frequency chart
+        this.updateFrequencyChart();
+        
+        console.log(`🔧 Updated ${type} frequency to ${value}Hz`);
+    }
+
+    updateFrequencyVisualization() {
+        if (!this.selectedBand) return;
+        
+        const freqVisualRange = document.getElementById('freqVisualRange');
+        if (!freqVisualRange) return;
+        
+        const startPercent = ((this.selectedBand.startFreq - 20) / (20000 - 20)) * 100;
+        const endPercent = ((this.selectedBand.endFreq - 20) / (20000 - 20)) * 100;
+        const widthPercent = endPercent - startPercent;
+        
+        freqVisualRange.style.left = `${startPercent}%`;
+        freqVisualRange.style.width = `${widthPercent}%`;
+        
+        // Color based on frequency range
+        const centerFreq = (this.selectedBand.startFreq + this.selectedBand.endFreq) / 2;
+        let color;
+        if (centerFreq < 250) color = '#e03a3c';
+        else if (centerFreq < 1000) color = '#17a2b8';
+        else if (centerFreq < 4000) color = '#28a745';
+        else if (centerFreq < 8000) color = '#ffc107';
+        else color = '#6f42c1';
+        
+        freqVisualRange.style.background = color;
+    }
+
+    updateBandDisplay(bandId) {
+        const band = this.bands.find(b => b.id === bandId);
+        if (!band) return;
+        
+        const bandElement = document.querySelector(`[data-band-id="${bandId}"]`);
+        if (bandElement) {
+            const freqDisplay = bandElement.querySelector('.freq-display');
+            const rangeSlider = bandElement.querySelector('.freq-range');
+            
+            if (freqDisplay) {
+                freqDisplay.textContent = `${band.startFreq} - ${band.endFreq} Hz`;
+            }
+            
+            if (rangeSlider) {
+                rangeSlider.value = (band.startFreq + band.endFreq) / 2;
+            }
+        }
+    }
+
+    deselectBand() {
+    if (this.selectedBand) {
+        const bandElement = document.querySelector(`[data-band-id="${this.selectedBand.id}"]`);
+        if (bandElement) {
+            bandElement.classList.remove('selected');
+        }
+        
+        this.selectedBand = null;
+        
+        // Hide selection UI
+        const selectedBandInfo = document.getElementById('selectedBandInfo');
+        const bandRangeControls = document.getElementById('bandRangeControls');
+        const selectedGainControls = document.getElementById('selectedGainControls');
+        
+        if (selectedBandInfo && bandRangeControls && selectedGainControls) {
+            selectedBandInfo.style.display = 'none';
+            bandRangeControls.style.display = 'none';
+            selectedGainControls.style.display = 'none';
+        }
+    }
+}
 
     initializeAudioContext() {
         try {
@@ -76,18 +410,7 @@ class GenericEqualizer {
             console.error('❌ Web Audio API not supported:', error);
         }
     }
-// Add this method to the GenericEqualizer class
-setupSpectrogramTimeLimits() {
-    console.log('⏰ Setting up spectrogram time limits...');
-    
-    // This will be used to limit spectrogram display to 10 seconds
-    this.spectrogramMaxDuration = 10; // 10 seconds maximum
-    
-    // Update the backend to process only first 10 seconds
-    this.spectrogramSettings = {
-        max_duration: this.spectrogramMaxDuration
-    };
-}
+
     async testBackendConnection() {
         try {
             console.log('🔌 Testing backend connection...');
@@ -580,13 +903,17 @@ setupSpectrogramTimeLimits() {
         this.renderBand(band);
         this.updateFrequencyChart();
         
+        // Auto-select the new band
+        this.selectBand(band.id);
+        
         console.log(`✅ Band added: ${startFreq}-${endFreq}Hz, gain: ${gain}`);
     }
 
     renderBand(band) {
         const container = document.getElementById('bandsContainer');
         const bandElement = document.createElement('div');
-        bandElement.className = 'band-control';
+        bandElement.className = 'band-control selectable';
+        bandElement.setAttribute('data-band-id', band.id);
         bandElement.innerHTML = `
             <div class="band-header">
                 <h6>${this.getBandName(band.startFreq, band.endFreq)}</h6>
@@ -627,7 +954,7 @@ setupSpectrogramTimeLimits() {
         container.appendChild(bandElement);
 
         // Add event listeners
-        this.attachBandEventListeners(bandElement, band.id);
+        this.attachEnhancedBandEventListeners(bandElement, band.id);
     }
 
     getBandName(startFreq, endFreq) {
@@ -642,37 +969,105 @@ setupSpectrogramTimeLimits() {
         return 'High End';
     }
 
-    attachBandEventListeners(element, bandId) {
+    attachEnhancedBandEventListeners(element, bandId) {
         const band = this.bands.find(b => b.id === bandId);
         const rangeSlider = element.querySelector('.freq-range');
         const gainSlider = element.querySelector('.gain-slider');
         const freqDisplay = element.querySelector('.freq-display');
         const gainValue = element.querySelector('.gain-value');
+        const bandControl = element;
 
-        // Frequency range slider
+        // Band selection
+        bandControl.addEventListener('click', (e) => {
+            if (!e.target.closest('.remove-band') && !e.target.closest('input[type="range"]')) {
+                this.selectBand(bandId);
+            }
+        });
+
+        // Enhanced frequency range slider with visual feedback
         rangeSlider.addEventListener('input', (e) => {
+            bandControl.classList.add('active');
             const centerFreq = parseInt(e.target.value);
             const bandwidth = band.bandwidth;
             band.startFreq = Math.max(20, centerFreq - bandwidth / 2);
             band.endFreq = Math.min(20000, centerFreq + bandwidth / 2);
+            band.bandwidth = band.endFreq - band.startFreq;
+            
             freqDisplay.textContent = `${band.startFreq} - ${band.endFreq} Hz`;
+            
+            // Update selection UI if this band is selected
+            if (this.selectedBand && this.selectedBand.id === bandId) {
+                this.updateBandSelectionUI();
+            }
+            
             this.updateFrequencyChart();
         });
 
-        // Gain slider
+        rangeSlider.addEventListener('mousedown', () => {
+            bandControl.classList.add('dragging');
+        });
+
+        rangeSlider.addEventListener('mouseup', () => {
+            bandControl.classList.remove('dragging', 'active');
+        });
+
+        rangeSlider.addEventListener('touchstart', () => {
+            bandControl.classList.add('dragging');
+        });
+
+        rangeSlider.addEventListener('touchend', () => {
+            bandControl.classList.remove('dragging', 'active');
+        });
+
+        // Enhanced gain slider with visual feedback
         gainSlider.addEventListener('input', (e) => {
+            bandControl.classList.add('active');
             band.gain = parseFloat(e.target.value);
             gainValue.textContent = band.gain.toFixed(1);
+            
+            // Visual feedback for gain changes
+            if (band.gain > 1.0) {
+                gainValue.style.background = '#28a745';
+            } else if (band.gain < 1.0) {
+                gainValue.style.background = '#dc3545';
+            } else {
+                gainValue.style.background = 'var(--accent-color)';
+            }
+            
             this.updateFrequencyChart();
+        });
+
+        gainSlider.addEventListener('change', () => {
+            bandControl.classList.remove('active');
         });
 
         // Remove band
         element.querySelector('.remove-band').addEventListener('click', () => {
+            if (this.selectedBand && this.selectedBand.id === bandId) {
+                this.deselectBand();
+            }
             this.removeBand(bandId);
+        });
+
+        // Band hover effects
+        bandControl.addEventListener('mouseenter', () => {
+            if (!bandControl.classList.contains('selected')) {
+                bandControl.style.transform = 'translateY(-2px)';
+            }
+        });
+
+        bandControl.addEventListener('mouseleave', () => {
+            if (!bandControl.classList.contains('dragging') && !bandControl.classList.contains('selected')) {
+                bandControl.style.transform = 'translateY(0)';
+            }
         });
     }
 
     removeBand(bandId) {
+        if (this.selectedBand && this.selectedBand.id === bandId) {
+            this.deselectBand();
+        }
+        
         this.bands = this.bands.filter(b => b.id !== bandId);
         this.updateBandsDisplay();
         this.updateFrequencyChart();
@@ -683,52 +1078,57 @@ setupSpectrogramTimeLimits() {
         const container = document.getElementById('bandsContainer');
         container.innerHTML = '';
         this.bands.forEach(band => this.renderBand(band));
+        
+        // If we had a selected band that was removed, deselect it
+        if (this.selectedBand && !this.bands.find(b => b.id === this.selectedBand.id)) {
+            this.deselectBand();
+        }
     }
 
     updateFrequencyChart() {
-    if (!this.spectrumData) return;
+        if (!this.spectrumData) return;
 
-    const frequencies = this.spectrumData.frequencies;
-    const inputMagnitude = this.spectrumData.magnitude;
-    const equalizedMagnitude = this.calculateEqualizedSpectrum(frequencies, inputMagnitude);
+        const frequencies = this.spectrumData.frequencies;
+        const inputMagnitude = this.spectrumData.magnitude;
+        const equalizedMagnitude = this.calculateEqualizedSpectrum(frequencies, inputMagnitude);
 
-    // Convert to dB scale
-    const inputDB = inputMagnitude.map(mag => 20 * Math.log10(mag + 1e-10));
-    const equalizedDB = equalizedMagnitude.map(mag => 20 * Math.log10(mag + 1e-10));
+        // Convert to dB scale
+        const inputDB = inputMagnitude.map(mag => 20 * Math.log10(mag + 1e-10));
+        const equalizedDB = equalizedMagnitude.map(mag => 20 * Math.log10(mag + 1e-10));
 
-    // Update frequency chart
-    Plotly.react(this.frequencyChart, [
-        {
-            x: frequencies,
-            y: inputDB,
-            type: 'scatter',
-            mode: 'lines',
-            line: { color: '#6c757d', width: 2 },
-            name: 'Input Spectrum',
-            hovertemplate: 'Frequency: %{x:.0f} Hz<br>Magnitude: %{y:.2f} dB<extra></extra>'
-        },
-        {
-            x: frequencies,
-            y: equalizedDB,
-            type: 'scatter',
-            mode: 'lines',
-            line: { color: '#e03a3c', width: 2 },
-            name: 'Equalized Spectrum',
-            hovertemplate: 'Frequency: %{x:.0f} Hz<br>Magnitude: %{y:.2f} dB<extra></extra>'
-        }
-    ], {
-        xaxis: { 
-            type: this.currentScale === 'audiogram' ? 'log' : 'linear',
-            title: this.currentScale === 'audiogram' ? 'Frequency (Hz) - Log Scale' : 'Frequency (Hz)'
-        }
-    });
+        // Update frequency chart
+        Plotly.react(this.frequencyChart, [
+            {
+                x: frequencies,
+                y: inputDB,
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: '#6c757d', width: 2 },
+                name: 'Input Spectrum',
+                hovertemplate: 'Frequency: %{x:.0f} Hz<br>Magnitude: %{y:.2f} dB<extra></extra>'
+            },
+            {
+                x: frequencies,
+                y: equalizedDB,
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: '#e03a3c', width: 2 },
+                name: 'Equalized Spectrum',
+                hovertemplate: 'Frequency: %{x:.0f} Hz<br>Magnitude: %{y:.2f} dB<extra></extra>'
+            }
+        ], {
+            xaxis: { 
+                type: this.currentScale === 'audiogram' ? 'log' : 'linear',
+                title: this.currentScale === 'audiogram' ? 'Frequency (Hz) - Log Scale' : 'Frequency (Hz)'
+            }
+        });
 
-    // Update scale display
-    document.getElementById('currentScaleDisplay').textContent = 
-        this.currentScale === 'audiogram' ? 'Logarithmic' : 'Linear';
+        // Update scale display
+        document.getElementById('currentScaleDisplay').textContent = 
+            this.currentScale === 'audiogram' ? 'Logarithmic' : 'Linear';
 
-    console.log('📊 Frequency chart updated');
-}
+        console.log('📊 Frequency chart updated');
+    }
 
     calculateEqualizedSpectrum(frequencies, inputMagnitude) {
         const equalizedMagnitude = [...inputMagnitude];
@@ -841,68 +1241,68 @@ setupSpectrogramTimeLimits() {
     }
 
     updateWaveformPlots() {
-    if (!this.audioData || !this.sampleRate) return;
+        if (!this.audioData || !this.sampleRate) return;
 
-    console.log('📈 Updating waveform plots...');
+        console.log('📈 Updating waveform plots...');
 
-    // Calculate the number of samples for 10 seconds
-    const targetDuration = 10; // 10 seconds
-    const maxSamples = Math.min(this.audioData.length, targetDuration * this.sampleRate);
-    
-    // Get the first 10 seconds of data (or all data if shorter than 10 seconds)
-    const displayTime = Array.from({length: maxSamples}, (_, i) => i / this.sampleRate);
-    const displayData = this.inputAmplitudeData.slice(0, maxSamples);
+        // Calculate the number of samples for 10 seconds
+        const targetDuration = 10; // 10 seconds
+        const maxSamples = Math.min(this.audioData.length, targetDuration * this.sampleRate);
+        
+        // Get the first 10 seconds of data (or all data if shorter than 10 seconds)
+        const displayTime = Array.from({length: maxSamples}, (_, i) => i / this.sampleRate);
+        const displayData = this.inputAmplitudeData.slice(0, maxSamples);
 
-    // Limit data points for performance (only if we have more than 5000 points)
-    let finalDisplayTime = displayTime;
-    let finalDisplayData = displayData;
+        // Limit data points for performance (only if we have more than 5000 points)
+        let finalDisplayTime = displayTime;
+        let finalDisplayData = displayData;
 
-    if (maxSamples > 5000) {
-        const step = Math.ceil(maxSamples / 5000);
-        finalDisplayTime = displayTime.filter((_, i) => i % step === 0);
-        finalDisplayData = displayData.filter((_, i) => i % step === 0);
+        if (maxSamples > 5000) {
+            const step = Math.ceil(maxSamples / 5000);
+            finalDisplayTime = displayTime.filter((_, i) => i % step === 0);
+            finalDisplayData = displayData.filter((_, i) => i % step === 0);
+        }
+
+        const displayDuration = Math.min(this.totalDuration, targetDuration);
+
+        // Update input waveform
+        Plotly.react(this.inputWaveformPlot, [{
+            x: finalDisplayTime,
+            y: finalDisplayData,
+            type: 'scatter',
+            mode: 'lines',
+            line: { color: '#e03a3c', width: 1.5 },
+            name: 'Input Signal'
+        }], {
+            xaxis: { 
+                range: [0, displayDuration],
+                title: { text: `Time (s) - Displaying: ${displayDuration.toFixed(2)}s` }
+            },
+            yaxis: { range: [-1, 1] }
+        });
+
+        // Update output waveform (initially same as input)
+        Plotly.react(this.outputWaveformPlot, [{
+            x: finalDisplayTime,
+            y: finalDisplayData,
+            type: 'scatter',
+            mode: 'lines',
+            line: { color: '#28a745', width: 1.5 },
+            name: 'Output Signal'
+        }], {
+            xaxis: { 
+                range: [0, displayDuration],
+                title: { text: `Time (s) - Displaying: ${displayDuration.toFixed(2)}s` }
+            },
+            yaxis: { range: [-1, 1] }
+        });
+
+        // Reset ranges
+        this.inputXRange = [0, displayDuration];
+        this.outputXRange = [0, displayDuration];
+        
+        console.log(`✅ Waveform plots updated - Displaying ${displayDuration.toFixed(2)} seconds`);
     }
-
-    const displayDuration = Math.min(this.totalDuration, targetDuration);
-
-    // Update input waveform
-    Plotly.react(this.inputWaveformPlot, [{
-        x: finalDisplayTime,
-        y: finalDisplayData,
-        type: 'scatter',
-        mode: 'lines',
-        line: { color: '#e03a3c', width: 1.5 },
-        name: 'Input Signal'
-    }], {
-        xaxis: { 
-            range: [0, displayDuration],
-            title: { text: `Time (s) - Displaying: ${displayDuration.toFixed(2)}s` }
-        },
-        yaxis: { range: [-1, 1] }
-    });
-
-    // Update output waveform (initially same as input)
-    Plotly.react(this.outputWaveformPlot, [{
-        x: finalDisplayTime,
-        y: finalDisplayData,
-        type: 'scatter',
-        mode: 'lines',
-        line: { color: '#28a745', width: 1.5 },
-        name: 'Output Signal'
-    }], {
-        xaxis: { 
-            range: [0, displayDuration],
-            title: { text: `Time (s) - Displaying: ${displayDuration.toFixed(2)}s` }
-        },
-        yaxis: { range: [-1, 1] }
-    });
-
-    // Reset ranges
-    this.inputXRange = [0, displayDuration];
-    this.outputXRange = [0, displayDuration];
-    
-    console.log(`✅ Waveform plots updated - Displaying ${displayDuration.toFixed(2)} seconds`);
-}
 
     async computeFrequencySpectrum(file) {
         try {
@@ -964,110 +1364,110 @@ setupSpectrogramTimeLimits() {
         console.log('✅ Client-side spectrum computed');
     }
 
-   async updateSpectrograms() {
-    if (!this.currentAudioFile) return;
+    async updateSpectrograms() {
+        if (!this.currentAudioFile) return;
 
-    try {
-        console.log('🎨 Computing spectrograms (10-second limit)...');
-        
-        // Compute input spectrogram with time limit
-        const formData = new FormData();
-        formData.append('file', this.currentAudioFile);
-        formData.append('max_duration', '10'); // Send max duration to backend
+        try {
+            console.log('🎨 Computing spectrograms (10-second limit)...');
+            
+            // Compute input spectrogram with time limit
+            const formData = new FormData();
+            formData.append('file', this.currentAudioFile);
+            formData.append('max_duration', '10'); // Send max duration to backend
 
-        const response = await fetch(`${this.baseURL}/compute_spectrogram`, {
-            method: 'POST',
-            body: formData
-        });
+            const response = await fetch(`${this.baseURL}/compute_spectrogram`, {
+                method: 'POST',
+                body: formData
+            });
 
-        if (response.ok) {
-            const spectrogramData = await response.json();
-            this.updateSpectrogramPlot(this.inputSpectrogram, spectrogramData, 'Input Spectrogram');
-            console.log('✅ Input spectrogram computed (10s limit)');
+            if (response.ok) {
+                const spectrogramData = await response.json();
+                this.updateSpectrogramPlot(this.inputSpectrogram, spectrogramData, 'Input Spectrogram');
+                console.log('✅ Input spectrogram computed (10s limit)');
 
-            // If processed audio exists, compute output spectrogram
-            if (this.processedAudioUrl) {
-                await this.computeOutputSpectrogram();
+                // If processed audio exists, compute output spectrogram
+                if (this.processedAudioUrl) {
+                    await this.computeOutputSpectrogram();
+                }
+            } else {
+                throw new Error('Spectrogram computation failed');
             }
-        } else {
-            throw new Error('Spectrogram computation failed');
+        } catch (error) {
+            console.error('❌ Error computing spectrogram:', error);
+            // Fallback to client-side computation without time limit
+            this.computeSpectrogramClientSide();
         }
-    } catch (error) {
-        console.error('❌ Error computing spectrogram:', error);
-        // Fallback to client-side computation without time limit
-        this.computeSpectrogramClientSide();
     }
-}
 
     async computeOutputSpectrogram() {
-    try {
-        const response = await fetch(this.processedAudioUrl);
-        const blob = await response.blob();
-        const processedFile = new File([blob], 'processed_audio.wav', { type: 'audio/wav' });
+        try {
+            const response = await fetch(this.processedAudioUrl);
+            const blob = await response.blob();
+            const processedFile = new File([blob], 'processed_audio.wav', { type: 'audio/wav' });
+            
+            const formData = new FormData();
+            formData.append('file', processedFile);
+            formData.append('max_duration', '10'); // Send max duration to backend
+
+            const spectrogramResponse = await fetch(`${this.baseURL}/compute_spectrogram`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (spectrogramResponse.ok) {
+                const spectrogramData = await spectrogramResponse.json();
+                this.updateSpectrogramPlot(this.outputSpectrogram, spectrogramData, 'Output Spectrogram');
+                console.log('✅ Output spectrogram computed (10s limit)');
+            }
+        } catch (error) {
+            console.error('❌ Error computing output spectrogram:', error);
+        }
+    }
+
+    updateSpectrogramPlot(plotElement, spectrogramData, title) {
+        // Ensure we only display up to 10 seconds
+        const maxTime = 10; // 10 seconds maximum
         
-        const formData = new FormData();
-        formData.append('file', processedFile);
-        formData.append('max_duration', '10'); // Send max duration to backend
+        let displayTimes = spectrogramData.times;
+        let displaySpectrogram = spectrogramData.spectrogram;
+        
+        // Filter data to only include times up to 10 seconds
+        const timeLimitIndex = displayTimes.findIndex(time => time > maxTime);
+        if (timeLimitIndex !== -1) {
+            displayTimes = displayTimes.slice(0, timeLimitIndex);
+            displaySpectrogram = displaySpectrogram.map(row => row.slice(0, timeLimitIndex));
+        }
+        
+        // Update the plot title to show time limit
+        const displayDuration = Math.min(Math.max(...displayTimes), maxTime);
+        const actualTitle = `${title} (${displayDuration.toFixed(1)}s)`;
 
-        const spectrogramResponse = await fetch(`${this.baseURL}/compute_spectrogram`, {
-            method: 'POST',
-            body: formData
+        Plotly.react(plotElement, [{
+            z: displaySpectrogram,
+            x: displayTimes,
+            y: spectrogramData.frequencies,
+            type: 'heatmap',
+            colorscale: 'Viridis',
+            showscale: true,
+            colorbar: {
+                title: 'dB',
+                titleside: 'right'
+            },
+            hovertemplate: 'Time: %{x:.2f}s<br>Frequency: %{y:.0f}Hz<br>Magnitude: %{z:.2f} dB<extra></extra>'
+        }], {
+            title: { text: '', font: { size: 14, color: '#6c757d' } },
+            xaxis: { 
+                title: 'Time (s)',
+                range: [0, displayDuration] // Set x-axis range to match displayed duration
+            },
+            yaxis: { 
+                title: 'Frequency (Hz)', 
+                type: 'log'
+            }
         });
-
-        if (spectrogramResponse.ok) {
-            const spectrogramData = await spectrogramResponse.json();
-            this.updateSpectrogramPlot(this.outputSpectrogram, spectrogramData, 'Output Spectrogram');
-            console.log('✅ Output spectrogram computed (10s limit)');
-        }
-    } catch (error) {
-        console.error('❌ Error computing output spectrogram:', error);
+        
+        console.log(`✅ ${title} updated - Displaying ${displayDuration.toFixed(1)} seconds`);
     }
-}
-
-   updateSpectrogramPlot(plotElement, spectrogramData, title) {
-    // Ensure we only display up to 10 seconds
-    const maxTime = 10; // 10 seconds maximum
-    
-    let displayTimes = spectrogramData.times;
-    let displaySpectrogram = spectrogramData.spectrogram;
-    
-    // Filter data to only include times up to 10 seconds
-    const timeLimitIndex = displayTimes.findIndex(time => time > maxTime);
-    if (timeLimitIndex !== -1) {
-        displayTimes = displayTimes.slice(0, timeLimitIndex);
-        displaySpectrogram = displaySpectrogram.map(row => row.slice(0, timeLimitIndex));
-    }
-    
-    // Update the plot title to show time limit
-    const displayDuration = Math.min(Math.max(...displayTimes), maxTime);
-    const actualTitle = `${title} (${displayDuration.toFixed(1)}s)`;
-
-    Plotly.react(plotElement, [{
-        z: displaySpectrogram,
-        x: displayTimes,
-        y: spectrogramData.frequencies,
-        type: 'heatmap',
-        colorscale: 'Viridis',
-        showscale: true,
-        colorbar: {
-            title: 'dB',
-            titleside: 'right'
-        },
-        hovertemplate: 'Time: %{x:.2f}s<br>Frequency: %{y:.0f}Hz<br>Magnitude: %{z:.2f} dB<extra></extra>'
-    }], {
-        title: { text: '', font: { size: 14, color: '#6c757d' } },
-        xaxis: { 
-            title: 'Time (s)',
-            range: [0, displayDuration] // Set x-axis range to match displayed duration
-        },
-        yaxis: { 
-            title: 'Frequency (Hz)', 
-            type: 'log'
-        }
-    });
-    
-    console.log(`✅ ${title} updated - Displaying ${displayDuration.toFixed(1)} seconds`);
-}
 
     async generateTestSignal() {
         this.showNotification('Generating test signal...', 'info');
@@ -1198,45 +1598,45 @@ setupSpectrogramTimeLimits() {
         });
     }
 
-   updateOutputWaveform() {
-    if (!this.processedAudioData) return;
+    updateOutputWaveform() {
+        if (!this.processedAudioData) return;
 
-    console.log('📈 Updating output waveform...');
+        console.log('📈 Updating output waveform...');
 
-    // Calculate the number of samples for 10 seconds
-    const targetDuration = 10; // 10 seconds
-    const maxSamples = Math.min(this.processedAudioData.length, targetDuration * this.sampleRate);
-    
-    // Get the first 10 seconds of data (or all data if shorter than 10 seconds)
-    const displayTime = Array.from({length: maxSamples}, (_, i) => i / this.sampleRate);
-    const displayData = this.outputAmplitudeData.slice(0, maxSamples);
+        // Calculate the number of samples for 10 seconds
+        const targetDuration = 10; // 10 seconds
+        const maxSamples = Math.min(this.processedAudioData.length, targetDuration * this.sampleRate);
+        
+        // Get the first 10 seconds of data (or all data if shorter than 10 seconds)
+        const displayTime = Array.from({length: maxSamples}, (_, i) => i / this.sampleRate);
+        const displayData = this.outputAmplitudeData.slice(0, maxSamples);
 
-    // Limit data points for performance (only if we have more than 5000 points)
-    let finalDisplayTime = displayTime;
-    let finalDisplayData = displayData;
+        // Limit data points for performance (only if we have more than 5000 points)
+        let finalDisplayTime = displayTime;
+        let finalDisplayData = displayData;
 
-    if (maxSamples > 5000) {
-        const step = Math.ceil(maxSamples / 5000);
-        finalDisplayTime = displayTime.filter((_, i) => i % step === 0);
-        finalDisplayData = displayData.filter((_, i) => i % step === 0);
+        if (maxSamples > 5000) {
+            const step = Math.ceil(maxSamples / 5000);
+            finalDisplayTime = displayTime.filter((_, i) => i % step === 0);
+            finalDisplayData = displayData.filter((_, i) => i % step === 0);
+        }
+
+        const displayDuration = Math.min(this.totalDuration, targetDuration);
+
+        Plotly.react(this.outputWaveformPlot, [{
+            x: finalDisplayTime,
+            y: finalDisplayData,
+            type: 'scatter',
+            mode: 'lines',
+            line: { color: '#28a745', width: 1.5 },
+            name: 'Output Signal'
+        }], {
+            xaxis: { range: this.outputXRange },
+            yaxis: { range: this.outputYRange }
+        });
+
+        console.log(`✅ Output waveform updated - Displaying ${displayDuration.toFixed(2)} seconds`);
     }
-
-    const displayDuration = Math.min(this.totalDuration, targetDuration);
-
-    Plotly.react(this.outputWaveformPlot, [{
-        x: finalDisplayTime,
-        y: finalDisplayData,
-        type: 'scatter',
-        mode: 'lines',
-        line: { color: '#28a745', width: 1.5 },
-        name: 'Output Signal'
-    }], {
-        xaxis: { range: this.outputXRange },
-        yaxis: { range: this.outputYRange }
-    });
-
-    console.log(`✅ Output waveform updated - Displaying ${displayDuration.toFixed(2)} seconds`);
-}
 
     // Audio playback methods
     playInput() {

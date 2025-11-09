@@ -1,0 +1,43 @@
+{
+  "name": "hussien2",
+  "description": "Custom equalizer preset with 5 bands",
+  "bands": [
+    {
+      "id": 1762692132949.1702,
+      "startFreq": 5695,
+      "endFreq": 5925,
+      "gain": 0.2,
+      "bandwidth": 230
+    },
+    {
+      "id": 1762692132950.8398,
+      "startFreq": 7985,
+      "endFreq": 8735,
+      "gain": 0.1,
+      "bandwidth": 750
+    },
+    {
+      "id": 1762692132950.622,
+      "startFreq": 20,
+      "endFreq": 1520,
+      "gain": 2,
+      "bandwidth": 3000
+    },
+    {
+      "id": 1762692132951.4475,
+      "startFreq": 12000,
+      "endFreq": 20000,
+      "gain": 1.8,
+      "bandwidth": 16000
+    },
+    {
+      "id": 1762692369315.0137,
+      "startFreq": 9230,
+      "endFreq": 10230,
+      "gain": 0,
+      "bandwidth": 1000
+    }
+  ],
+  "created_at": "2025-11-09T14:48:03.897970",
+  "version": "1.0"
+}

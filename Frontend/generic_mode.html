@@ -1,547 +1,914 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Generic Mode - Signal Equalizer</title>
+    <meta
+      name="description"
+      content="Custom frequency band division with precise control over audio signals"
+    />
+    <meta
+      name="keywords"
+      content="signal equalizer, generic mode, frequency control, audio processing"
+    />
 
-<head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>Generic Mode - Signal Equalizer</title>
-  <meta name="description" content="Custom frequency band division with precise control over audio signals">
-  <meta name="keywords" content="signal equalizer, generic mode, frequency control, audio processing">
+    <!-- Favicons -->
+    <link href="assets/img/logo.png" rel="icon" />
+    <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon" />
 
-  <!-- Favicons -->
-  <link href="assets/img/logo.png" rel="icon">
-  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+      rel="stylesheet"
+    />
 
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com" rel="preconnect">
-  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <!-- Vendor CSS Files -->
+    <link
+      href="assets/vendor/bootstrap/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="assets/vendor/bootstrap-icons/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <link href="assets/vendor/aos/aos.css" rel="stylesheet" />
+    <link
+      href="assets/vendor/glightbox/css/glightbox.min.css"
+      rel="stylesheet"
+    />
+    <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet" />
 
-  <!-- Vendor CSS Files -->
-  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
-  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
-  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+    <!-- Main CSS File -->
+    <link href="assets/css/main.css" rel="stylesheet" />
+    <link href="assets/css/generic_mode.css" rel="stylesheet" />
 
-  <!-- Main CSS File -->
-  <link href="assets/css/main.css" rel="stylesheet">
-  <link href="assets/css/generic_mode.css" rel="stylesheet">
+    <!-- External Libraries -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  </head>
 
-  <!-- External Libraries -->
-  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <body class="generic-mode-page">
+    <header id="header" class="header d-flex align-items-center sticky-top">
+      <div
+        class="container-fluid container-xl position-relative d-flex align-items-center"
+      >
+        <a href="index.html" class="logo d-flex align-items-center me-auto">
+          <img src="assets/img/logo2.png" alt="Signal Equalizer" />
+        </a>
 
-</head>
-
-<body class="generic-mode-page">
-
-  <header id="header" class="header d-flex align-items-center sticky-top">
-    <div class="container-fluid container-xl position-relative d-flex align-items-center">
-
-      <a href="index.html" class="logo d-flex align-items-center me-auto">
-        <img src="assets/img/logo2.png" alt="Signal Equalizer">
-      </a>
-
-      <nav id="navmenu" class="navmenu">
-        <ul>
-          <li><a href="index.html">Home</a></li>
-          <li><a href="index.html#features">Features</a></li>
-          <li><a href="index.html#modes">Modes</a></li>
-          <li><a href="index.html#applications">Applications</a></li>
-          <li><a href="index.html#about">About</a></li>
-          <li><a href="index.html#contact">Contact</a></li>
-        </ul>
-        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
-      </nav>
-
-      <a class="btn-getstarted" href="index.html">Back to Home</a>
-
-    </div>
-  </header>
-
-  <main class="main">
-    <!-- Hero Headline Section -->
-    <section id="headline" class="headline-section section">
-      <div class="container">
-        <div class="row justify-content-center text-center">
-          <div class="col-lg-8" data-aos="fade-up" data-aos-delay="100">
-            <h1 class="headline-title">
-              <i class="bi bi-sliders2-vertical me-3"></i>
-              Generic Audio Equalizer
-            </h1>
-            <p class="headline-subtitle">
-              Advanced signal processing with real-time visualization and precise frequency control
-            </p>
-            <div class="headline-features">
-              <div class="feature-badges">
-                <span class="feature-badge">
-                  <i class="bi bi-graph-up me-1"></i>Frequency Analysis
-                </span>
-                <span class="feature-badge">
-                  <i class="bi bi-soundwave me-1"></i>Waveform Visualization
-                </span>
-                <span class="feature-badge">
-                  <i class="bi bi-collection-play me-1"></i>Real-time Processing
-                </span>
-                <span class="feature-badge">
-                  <i class="bi bi-gear me-1"></i>Custom Presets
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Equalizer Interface Section -->
-    <section id="equalizer-interface" class="equalizer-interface section">
-      <div class="container">
-        <div class="row">
-          
-          <!-- Left Sidebar - Equalizer Controls -->
-          <div class="col-lg-4">
-            <div class="control-panel" data-aos="fade-right" data-aos-delay="100">
-              <div class="panel-header">
-                <h4><i class="bi bi-sliders me-2"></i>Equalizer Controls</h4>
-              </div>
-
-              <!-- File Upload Section -->
-              <div class="file-section mb-4">
-                <label class="form-label"><i class="bi bi-upload me-2"></i>Upload Audio File:</label>
-                <input type="file" id="audioUpload" class="form-control" accept=".wav,.wave,.flac,.mp3,.m4a,.aac,.ogg,.mp4,.wma,.aiff,.aif,audio/*">
-                <div class="file-requirements mt-2">
-                  <small class="text-muted">
-                    <i class="bi bi-info-circle me-1"></i>
-                    Supported formats: WAV, FLAC, MP3, M4A, AAC, OGG, AIFF
-                  </small>
-                </div>
-                <div id="fileInfo" class="mt-2"></div>
-                
-                <div class="mt-3">
-                  <button id="generateTest" class="btn btn-info w-100">
-                    <i class="bi bi-file-earmark-music me-1"></i>Generate Test Signal
-                  </button>
-                  <small class="text-muted">For testing without uploading</small>
-                </div>
-              </div>
-
-              <!-- Scale and Preset Controls -->
-              <div class="control-section mb-4">
-                <div class="row g-2">
-                  <div class="col-6">
-                    <label class="form-label"><i class="bi bi-graph-up me-2"></i>Frequency Scale:</label>
-                    <select id="scaleSelect" class="form-select">
-                      <option value="linear">Linear</option>
-                      <option value="audiogram">Audiogram</option>
-                    </select>
-                  </div>
-                  <div class="col-6">
-                    <label class="form-label"><i class="bi bi-collection me-2"></i>Presets:</label>
-                    <select id="presetList" class="form-select">
-                      <option value="">Select preset...</option>
-                    </select>
-                  </div>
-                </div>
-                
-                <!-- Preset Management -->
-                <div class="preset-management mt-3">
-                  <div class="row g-2">
-                    <div class="col-6">
-                      <input type="text" id="presetName" class="form-control" placeholder="Preset name">
-                    </div>
-                    <div class="col-6">
-                      <button id="savePreset" class="btn btn-outline-primary w-100">
-                        <i class="bi bi-save me-1"></i>Save
-                      </button>
-                    </div>
-                  </div>
-                  <div class="row g-2 mt-2">
-                    <div class="col-6">
-                      <button id="updatePreset" class="btn btn-outline-success w-100">
-                        <i class="bi bi-arrow-clockwise me-1"></i>Update
-                      </button>
-                    </div>
-                    <div class="col-6">
-                      <button id="deletePreset" class="btn btn-outline-danger w-100">
-                        <i class="bi bi-trash me-1"></i>Delete
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Frequency Bands -->
-              <div class="bands-section mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                  <h6 class="mb-0">Frequency Bands</h6>
-                  <div class="band-management">
-                    <button id="addBand" class="btn btn-primary btn-sm">
-                      <i class="bi bi-plus-circle me-1"></i>Add Band
-                    </button>
-                  </div>
-                </div>
-                <div id="bandsContainer" class="bands-container">
-                  <!-- Dynamic bands will be added here -->
-                </div>
-              </div>
-
-              <!-- Processing Controls -->
-              <div class="processing-controls">
-                <button id="processAudio" class="btn btn-success w-100 mb-2" disabled>
-                  <i class="bi bi-gear me-1"></i>Process Audio
-                </button>
-                <button id="exportAudio" class="btn btn-outline-success w-100">
-                  <i class="bi bi-download me-1"></i>Export Processed Audio
-                </button>
-                <div class="processing-progress mt-2" style="display: none;" id="processingProgress">
-                  <div class="progress">
-                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
-                  </div>
-                  <small class="text-muted mt-1">Processing audio...</small>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Right Content - Visualizations -->
-          <div class="col-lg-8">
-            <div class="visualization-panel" data-aos="fade-left" data-aos-delay="200">
-
-              <!-- Signal Viewers Section -->
-              <div class="signal-viewers-section mb-4">
-                <div class="section-header d-flex justify-content-between align-items-center mb-3">
-                  <h4><i class="bi bi-collection-play me-2"></i>Signal Viewers</h4>
-                  <div class="global-controls">
-                    <button id="playAll" class="btn btn-primary btn-sm">
-                      <i class="bi bi-play-fill"></i> Play All
-                    </button>
-                    <button id="pauseAll" class="btn btn-secondary btn-sm">
-                      <i class="bi bi-pause-fill"></i> Pause
-                    </button>
-                    <button id="stopAll" class="btn btn-warning btn-sm">
-                      <i class="bi bi-stop-fill"></i> Stop
-                    </button>
-                    <button id="resetViewAll" class="btn btn-outline-secondary btn-sm">
-                      <i class="bi bi-arrow-counterclockwise"></i> Reset Views
-                    </button>
-                  </div>
-                </div>
-                
-                <!-- Input Signal Viewer -->
-                <div class="viewer-stack">
-                  <div class="graph-box mb-4">
-                    <div class="graph-header d-flex justify-content-between align-items-center">
-                      <h5 class="viewer-title">
-                        <i class="bi bi-arrow-down-circle me-2 text-primary"></i>
-                        Input Signal
-                        <span class="badge bg-primary ms-2">Original</span>
-                      </h5>
-                      <div class="viewer-controls-top">
-                        <div class="speed-control">
-                          <label class="speed-label me-2">Speed:</label>
-                          <select class="form-select form-select-sm speed-select" id="inputSpeed" style="width: auto;">
-                            <option value="0.5">0.5x</option>
-                            <option value="0.75">0.75x</option>
-                            <option value="1" selected>1x</option>
-                            <option value="1.25">1.25x</option>
-                            <option value="1.5">1.5x</option>
-                            <option value="2">2x</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                    <div id="inputWaveformPlot" class="cine-viewer"></div>
-                    <div class="viewer-controls mt-2">
-                      <div class="d-flex justify-content-between align-items-center">
-                        <div class="playback-controls">
-                          <button id="playInput" class="btn btn-sm btn-primary">
-                            <i class="bi bi-play-fill me-1"></i>Play
-                          </button>
-                          <button id="pauseInput" class="btn btn-sm btn-secondary">
-                            <i class="bi bi-pause-fill me-1"></i>Pause
-                          </button>
-                          <button id="stopInput" class="btn btn-sm btn-warning">
-                            <i class="bi bi-stop-fill me-1"></i>Stop
-                          </button>
-                        </div>
-                        <div class="viewer-time-info">
-                          <small class="text-muted">
-                            <i class="bi bi-clock me-1"></i>
-                            Duration: <span id="inputDuration">0.00</span>s | 
-                            Position: <span id="inputPosition">0.00</span>s
-                          </small>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Output Signal Viewer -->
-                  <div class="graph-box">
-                    <div class="graph-header d-flex justify-content-between align-items-center">
-                      <h5 class="viewer-title">
-                        <i class="bi bi-arrow-up-circle me-2 text-success"></i>
-                        Output Signal
-                        <span class="badge bg-success ms-2">Processed</span>
-                      </h5>
-                      <div class="viewer-controls-top">
-                        <div class="speed-control">
-                          <label class="speed-label me-2">Speed:</label>
-                          <select class="form-select form-select-sm speed-select" id="outputSpeed" style="width: auto;">
-                            <option value="0.5">0.5x</option>
-                            <option value="0.75">0.75x</option>
-                            <option value="1" selected>1x</option>
-                            <option value="1.25">1.25x</option>
-                            <option value="1.5">1.5x</option>
-                            <option value="2">2x</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                    <div id="outputWaveformPlot" class="cine-viewer"></div>
-                    <div class="viewer-controls mt-2">
-                      <div class="d-flex justify-content-between align-items-center">
-                        <div class="playback-controls">
-                          <button id="playOutput" class="btn btn-sm btn-success">
-                            <i class="bi bi-play-fill me-1"></i>Play
-                          </button>
-                          <button id="pauseOutput" class="btn btn-sm btn-secondary">
-                            <i class="bi bi-pause-fill me-1"></i>Pause
-                          </button>
-                          <button id="stopOutput" class="btn btn-sm btn-warning">
-                            <i class="bi bi-stop-fill me-1"></i>Stop
-                          </button>
-                        </div>
-                        <div class="viewer-time-info">
-                          <small class="text-muted">
-                            <i class="bi bi-clock me-1"></i>
-                            Duration: <span id="outputDuration">0.00</span>s | 
-                            Position: <span id="outputPosition">0.00</span>s
-                          </small>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Timeline Slider -->
-                <div class="timeline-section mt-3">
-                  <div class="timeline-controls">
-                    <input type="range" id="timelineSlider" class="form-range timeline-slider" min="0" max="1000" value="0">
-                    <div class="timeline-labels d-flex justify-content-between">
-                      <small>0.00s</small>
-                      <small id="currentTime">0.00s</small>
-                      <small id="totalTime">0.00s</small>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Frequency Spectrum Section -->
-              <div class="frequency-spectrum-section mb-4">
-                <div class="graph-box">
-                  <div class="graph-header d-flex justify-content-between align-items-center mb-3">
-                    <h4>
-                      <i class="bi bi-graph-up-arrow me-2 text-info"></i>
-                      Frequency Spectrum Analysis
-                    </h4>
-                    <div class="graph-controls">
-                      <button id="resetGraph" class="btn btn-outline-secondary btn-sm">
-                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset View
-                      </button>
-                      <button id="exportSpectrum" class="btn btn-outline-primary btn-sm">
-                        <i class="bi bi-download me-1"></i>Export
-                      </button>
-                    </div>
-                  </div>
-                  <div class="spectrum-info mb-2">
-                    <div class="row text-center">
-                      <div class="col-4">
-                        <small class="text-muted">
-                          <i class="bi bi-soundwave me-1"></i>
-                          Input Spectrum
-                        </small>
-                      </div>
-                      <div class="col-4">
-                        <small class="text-muted">
-                          <i class="bi bi-filter-circle me-1"></i>
-                          Equalized Spectrum
-                        </small>
-                      </div>
-                      <div class="col-4">
-                        <small class="text-muted">
-                          <i class="bi bi-sliders me-1"></i>
-                          Current Scale: <span id="currentScaleDisplay">Linear</span>
-                        </small>
-                      </div>
-                    </div>
-                  </div>
-                  <div id="frequencyChart" class="spectrum-plot"></div>
-                </div>
-              </div>
-
-              <!-- Spectrograms Section -->
-              <div class="spectrograms-section">
-                <div class="graph-box">
-                  <div class="graph-header d-flex justify-content-between align-items-center mb-3">
-                    <h4>
-                      <i class="bi bi-soundwave me-2 text-warning"></i>
-                      Time-Frequency Analysis
-                    </h4>
-                    <div class="graph-controls">
-                      <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="showSpectrograms" checked>
-                        <label class="form-check-label" for="showSpectrograms">Show Spectrograms</label>
-                      </div>
-                      <button id="exportSpectrograms" class="btn btn-outline-primary btn-sm ms-2">
-                        <i class="bi bi-download me-1"></i>Export All
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div id="spectrogramsContainer">
-                    <!-- Input Spectrogram -->
-                    <div class="spectrogram-stack mb-4">
-                      <div class="graph-box">
-                        <div class="graph-header">
-                          <h5>
-                            <i class="bi bi-arrow-down-circle me-2 text-primary"></i>
-                            Input Spectrogram
-                            <span class="badge bg-primary ms-2">Original</span>
-                          </h5>
-                        </div>
-                        <div id="inputSpectrogram" class="spectrogram-plot"></div>
-                        <div class="spectrogram-info mt-2">
-                          <small class="text-muted">
-                            <i class="bi bi-info-circle me-1"></i>
-                            Shows frequency content over time for the original signal
-                          </small>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Output Spectrogram -->
-                    <div class="spectrogram-stack">
-                      <div class="graph-box">
-                        <div class="graph-header">
-                          <h5>
-                            <i class="bi bi-arrow-up-circle me-2 text-success"></i>
-                            Output Spectrogram
-                            <span class="badge bg-success ms-2">Processed</span>
-                          </h5>
-                        </div>
-                        <div id="outputSpectrogram" class="spectrogram-plot"></div>
-                        <div class="spectrogram-info mt-2">
-                          <small class="text-muted">
-                            <i class="bi bi-info-circle me-1"></i>
-                            Shows frequency content over time for the processed signal
-                          </small>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <footer id="footer" class="footer dark-background">
-
-    <div class="container footer-top">
-      <div class="row gy-4">
-        <div class="col-lg-4 col-md-6 footer-about">
-          <a href="index.html" class="logo d-flex align-items-center">
-            <span class="sitename">Signal Equalizer</span>
-          </a>
-          <div class="footer-contact pt-3">
-            <p>Audio Research Lab</p>
-            <p>University Campus</p>
-            <p class="mt-3"><strong>Email:</strong> <span>support@signalequalizer.com</span></p>
-            <p><strong>Phone:</strong> <span>+1 5589 55488 55</span></p>
-          </div>
-          <div class="social-links d-flex mt-4">
-            <a href=""><i class="bi bi-twitter-x"></i></a>
-            <a href=""><i class="bi bi-facebook"></i></a>
-            <a href=""><i class="bi bi-instagram"></i></a>
-            <a href=""><i class="bi bi-linkedin"></i></a>
-          </div>
-        </div>
-
-        <div class="col-lg-2 col-md-3 footer-links">
-          <h4>Quick Links</h4>
+        <nav id="navmenu" class="navmenu">
           <ul>
             <li><a href="index.html">Home</a></li>
             <li><a href="index.html#features">Features</a></li>
             <li><a href="index.html#modes">Modes</a></li>
             <li><a href="index.html#applications">Applications</a></li>
             <li><a href="index.html#about">About</a></li>
+            <li><a href="index.html#contact">Contact</a></li>
           </ul>
-        </div>
+          <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+        </nav>
 
-        <div class="col-lg-2 col-md-3 footer-links">
-          <h4>Processing Modes</h4>
-          <ul>
-            <li><a href="generic_mode.html">Generic Mode</a></li>
-            <li><a href="instruments_mode.html">Music Mode</a></li>
-            <li><a href="animals_mode.html">Animal Mode</a></li>
-            <li><a href="voices_mode.html">Voice Mode</a></li>
-          </ul>
-        </div>
-
-        <div class="col-lg-4 col-md-12 footer-newsletter">
-          <h4>Our Newsletter</h4>
-          <p>Subscribe to receive updates on new features and research applications!</p>
-          <form action="forms/newsletter.php" method="post" class="php-email-form">
-            <div class="newsletter-form"><input type="email" name="email" placeholder="Your email"><input type="submit" value="Subscribe"></div>
-            <div class="loading">Loading</div>
-            <div class="error-message"></div>
-            <div class="sent-message">Your subscription request has been sent. Thank you!</div>
-          </form>
-        </div>
-
+        <a class="btn-getstarted" href="index.html">Back to Home</a>
       </div>
+    </header>
+
+    <main class="main">
+      <!-- Hero Headline Section -->
+      <section id="headline" class="headline-section section">
+        <div class="container">
+          <div class="row justify-content-center text-center">
+            <div class="col-lg-8" data-aos="fade-up" data-aos-delay="100">
+              <h1 class="headline-title">
+                <i class="bi bi-sliders2-vertical me-3"></i>
+                Generic Audio Equalizer
+              </h1>
+              <p class="headline-subtitle">
+                Advanced signal processing with real-time visualization and
+                precise frequency control
+              </p>
+              <div class="headline-features">
+                <div class="feature-badges">
+                  <span class="feature-badge">
+                    <i class="bi bi-graph-up me-1"></i>Frequency Analysis
+                  </span>
+                  <span class="feature-badge">
+                    <i class="bi bi-soundwave me-1"></i>Waveform Visualization
+                  </span>
+                  <span class="feature-badge">
+                    <i class="bi bi-collection-play me-1"></i>Real-time
+                    Processing
+                  </span>
+                  <span class="feature-badge">
+                    <i class="bi bi-gear me-1"></i>Custom Presets
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Equalizer Interface Section -->
+      <section id="equalizer-interface" class="equalizer-interface section">
+        <div class="container">
+          <!-- Top Controls Section -->
+          <div class="row mb-4">
+            <div class="col-12">
+              <div class="control-panel-top" data-aos="fade-up">
+                <div class="panel-header">
+                  <h4><i class="bi bi-sliders me-2"></i>Equalizer Controls</h4>
+                </div>
+
+                <div class="row g-4">
+                  <!-- File Upload Section -->
+                  <div class="col-md-4">
+                    <div class="file-section">
+                      <label class="form-label"
+                        ><i class="bi bi-upload me-2"></i>Upload Audio
+                        File:</label
+                      >
+                      <input
+                        type="file"
+                        id="audioUpload"
+                        class="form-control"
+                        accept=".wav,.wave,.flac,.mp3,.m4a,.aac,.ogg,.mp4,.wma,.aiff,.aif,audio/*"
+                      />
+                      <div class="file-requirements mt-2">
+                        <small class="text-muted">
+                          <i class="bi bi-info-circle me-1"></i>
+                          Supported formats: WAV, FLAC, MP3, M4A, AAC, OGG, AIFF
+                        </small>
+                      </div>
+                      <div id="fileInfo" class="mt-2"></div>
+
+                      <div class="mt-3">
+                        <button id="generateTest" class="btn btn-info w-100">
+                          <i class="bi bi-file-earmark-music me-1"></i>Generate
+                          Test Signal
+                        </button>
+                        <small class="text-muted"
+                          >For testing without uploading</small
+                        >
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Scale and Preset Controls -->
+                  <div class="col-md-4">
+                    <div class="control-section">
+                      <div class="row g-2">
+                        <div class="col-12 mb-3">
+                          <label class="form-label"
+                            ><i class="bi bi-graph-up me-2"></i>Frequency
+                            Scale:</label
+                          >
+                          <select id="scaleSelect" class="form-select">
+                            <option value="linear">Linear</option>
+                            <option value="audiogram">Audiogram</option>
+                          </select>
+                        </div>
+                        <div class="col-12">
+                          <label class="form-label"
+                            ><i class="bi bi-collection me-2"></i
+                            >Presets:</label
+                          >
+                          <select id="presetList" class="form-select">
+                            <option value="">Select preset...</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Preset Management -->
+                  <div class="col-md-4">
+                    <div class="preset-management">
+                      <label class="form-label"
+                        ><i class="bi bi-gear me-2"></i>Preset
+                        Management:</label
+                      >
+                      <div class="row g-2 mb-2">
+                        <div class="col-8">
+                          <input
+                            type="text"
+                            id="presetName"
+                            class="form-control"
+                            placeholder="Preset name"
+                          />
+                        </div>
+                        <div class="col-4">
+                          <button
+                            id="savePreset"
+                            class="btn btn-outline-primary w-100"
+                          >
+                            <i class="bi bi-save me-1"></i>Save
+                          </button>
+                        </div>
+                      </div>
+                      <div class="row g-2">
+                        <div class="col-6">
+                          <button
+                            id="updatePreset"
+                            class="btn btn-outline-success w-100"
+                          >
+                            <i class="bi bi-arrow-clockwise me-1"></i>Update
+                          </button>
+                        </div>
+                        <div class="col-6">
+                          <button
+                            id="deletePreset"
+                            class="btn btn-outline-danger w-100"
+                          >
+                            <i class="bi bi-trash me-1"></i>Delete
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Content Section -->
+          <div class="row">
+            <!-- Left Side - Signal Viewers -->
+            <div class="col-lg-8">
+              <div
+                class="visualization-panel"
+                data-aos="fade-right"
+                data-aos-delay="100"
+              >
+                <!-- Signal Viewers Section -->
+                <div class="signal-viewers-section mb-4">
+                  <div
+                    class="section-header d-flex justify-content-between align-items-center mb-3"
+                  >
+                    <h4>
+                      <i class="bi bi-collection-play me-2"></i>Signal Viewers
+                    </h4>
+                    <div class="global-controls">
+                      <button id="playAll" class="btn btn-primary btn-sm">
+                        <i class="bi bi-play-fill"></i> Play All
+                      </button>
+                      <button id="pauseAll" class="btn btn-secondary btn-sm">
+                        <i class="bi bi-pause-fill"></i> Pause
+                      </button>
+                      <button id="stopAll" class="btn btn-warning btn-sm">
+                        <i class="bi bi-stop-fill"></i> Stop
+                      </button>
+                      <button
+                        id="resetViewAll"
+                        class="btn btn-outline-secondary btn-sm"
+                      >
+                        <i class="bi bi-arrow-counterclockwise"></i> Reset Views
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Input Signal Viewer -->
+                  <div class="viewer-stack">
+                    <div class="graph-box mb-4">
+                      <div
+                        class="graph-header d-flex justify-content-between align-items-center"
+                      >
+                        <h5 class="viewer-title">
+                          <i
+                            class="bi bi-arrow-down-circle me-2 text-primary"
+                          ></i>
+                          Input Signal
+                          <span class="badge bg-primary ms-2">Original</span>
+                        </h5>
+                        <div class="viewer-controls-top">
+                          <div class="speed-control">
+                            <label class="speed-label me-2">Speed:</label>
+                            <select
+                              class="form-select form-select-sm speed-select"
+                              id="inputSpeed"
+                              style="width: auto"
+                            >
+                              <option value="0.5">0.5x</option>
+                              <option value="0.75">0.75x</option>
+                              <option value="1" selected>1x</option>
+                              <option value="1.25">1.25x</option>
+                              <option value="1.5">1.5x</option>
+                              <option value="2">2x</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                      <div id="inputWaveformPlot" class="cine-viewer"></div>
+                      <div class="viewer-controls mt-2">
+                        <div
+                          class="d-flex justify-content-between align-items-center"
+                        >
+                          <div class="playback-controls">
+                            <button
+                              id="playInput"
+                              class="btn btn-sm btn-primary"
+                            >
+                              <i class="bi bi-play-fill me-1"></i>Play
+                            </button>
+                            <button
+                              id="pauseInput"
+                              class="btn btn-sm btn-secondary"
+                            >
+                              <i class="bi bi-pause-fill me-1"></i>Pause
+                            </button>
+                            <button
+                              id="stopInput"
+                              class="btn btn-sm btn-warning"
+                            >
+                              <i class="bi bi-stop-fill me-1"></i>Stop
+                            </button>
+                          </div>
+                          <div class="viewer-time-info">
+                            <small class="text-muted">
+                              <i class="bi bi-clock me-1"></i>
+                              Duration: <span id="inputDuration">0.00</span>s |
+                              Position: <span id="inputPosition">0.00</span>s
+                            </small>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Output Signal Viewer -->
+                    <div class="graph-box">
+                      <div
+                        class="graph-header d-flex justify-content-between align-items-center"
+                      >
+                        <h5 class="viewer-title">
+                          <i
+                            class="bi bi-arrow-up-circle me-2 text-success"
+                          ></i>
+                          Output Signal
+                          <span class="badge bg-success ms-2">Processed</span>
+                        </h5>
+                        <div class="viewer-controls-top">
+                          <div class="speed-control">
+                            <label class="speed-label me-2">Speed:</label>
+                            <select
+                              class="form-select form-select-sm speed-select"
+                              id="outputSpeed"
+                              style="width: auto"
+                            >
+                              <option value="0.5">0.5x</option>
+                              <option value="0.75">0.75x</option>
+                              <option value="1" selected>1x</option>
+                              <option value="1.25">1.25x</option>
+                              <option value="1.5">1.5x</option>
+                              <option value="2">2x</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                      <div id="outputWaveformPlot" class="cine-viewer"></div>
+                      <div class="viewer-controls mt-2">
+                        <div
+                          class="d-flex justify-content-between align-items-center"
+                        >
+                          <div class="playback-controls">
+                            <button
+                              id="playOutput"
+                              class="btn btn-sm btn-success"
+                            >
+                              <i class="bi bi-play-fill me-1"></i>Play
+                            </button>
+                            <button
+                              id="pauseOutput"
+                              class="btn btn-sm btn-secondary"
+                            >
+                              <i class="bi bi-pause-fill me-1"></i>Pause
+                            </button>
+                            <button
+                              id="stopOutput"
+                              class="btn btn-sm btn-warning"
+                            >
+                              <i class="bi bi-stop-fill me-1"></i>Stop
+                            </button>
+                          </div>
+                          <div class="viewer-time-info">
+                            <small class="text-muted">
+                              <i class="bi bi-clock me-1"></i>
+                              Duration: <span id="outputDuration">0.00</span>s |
+                              Position: <span id="outputPosition">0.00</span>s
+                            </small>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Timeline Slider -->
+                  <div class="timeline-section mt-3">
+                    <div class="timeline-controls">
+                      <input
+                        type="range"
+                        id="timelineSlider"
+                        class="form-range timeline-slider"
+                        min="0"
+                        max="1000"
+                        value="0"
+                      />
+                      <div
+                        class="timeline-labels d-flex justify-content-between"
+                      >
+                        <small>0.00s</small>
+                        <small id="currentTime">0.00s</small>
+                        <small id="totalTime">0.00s</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Frequency Spectrum Section -->
+                <div class="frequency-spectrum-section mb-4">
+                  <div class="graph-box">
+                    <div
+                      class="graph-header d-flex justify-content-between align-items-center mb-3"
+                    >
+                      <h4>
+                        <i class="bi bi-graph-up-arrow me-2 text-info"></i>
+                        Frequency Spectrum Analysis
+                      </h4>
+                      <div class="graph-controls">
+                        <button
+                          id="resetGraph"
+                          class="btn btn-outline-secondary btn-sm"
+                        >
+                          <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                          View
+                        </button>
+                        <button
+                          id="exportSpectrum"
+                          class="btn btn-outline-primary btn-sm"
+                        >
+                          <i class="bi bi-download me-1"></i>Export
+                        </button>
+                      </div>
+                    </div>
+                    <div class="spectrum-info mb-2">
+                      <div class="row text-center">
+                        <div class="col-4">
+                          <small class="text-muted">
+                            <i class="bi bi-soundwave me-1"></i>
+                            Input Spectrum
+                          </small>
+                        </div>
+                        <div class="col-4">
+                          <small class="text-muted">
+                            <i class="bi bi-filter-circle me-1"></i>
+                            Equalized Spectrum
+                          </small>
+                        </div>
+                        <div class="col-4">
+                          <small class="text-muted">
+                            <i class="bi bi-sliders me-1"></i>
+                            Current Scale:
+                            <span id="currentScaleDisplay">Linear</span>
+                          </small>
+                        </div>
+                      </div>
+                    </div>
+                    <div id="frequencyChart" class="spectrum-plot"></div>
+                  </div>
+                </div>
+
+                <!-- Spectrograms Section -->
+                <div class="spectrograms-section">
+                  <div class="graph-box">
+                    <div
+                      class="graph-header d-flex justify-content-between align-items-center mb-3"
+                    >
+                      <h4>
+                        <i class="bi bi-soundwave me-2 text-warning"></i>
+                        Time-Frequency Analysis
+                      </h4>
+                      <div class="graph-controls">
+                        <div class="form-check form-switch">
+                          <input
+                            class="form-check-input"
+                            type="checkbox"
+                            id="showSpectrograms"
+                            checked
+                          />
+                          <label class="form-check-label" for="showSpectrograms"
+                            >Show Spectrograms</label
+                          >
+                        </div>
+                        <button
+                          id="exportSpectrograms"
+                          class="btn btn-outline-primary btn-sm ms-2"
+                        >
+                          <i class="bi bi-download me-1"></i>Export All
+                        </button>
+                      </div>
+                    </div>
+
+                    <div id="spectrogramsContainer">
+                      <!-- Input Spectrogram -->
+                      <div class="spectrogram-stack mb-4">
+                        <div class="graph-box">
+                          <div class="graph-header">
+                            <h5>
+                              <i
+                                class="bi bi-arrow-down-circle me-2 text-primary"
+                              ></i>
+                              Input Spectrogram
+                              <span class="badge bg-primary ms-2"
+                                >Original</span
+                              >
+                            </h5>
+                          </div>
+                          <div
+                            id="inputSpectrogram"
+                            class="spectrogram-plot"
+                          ></div>
+                          <div class="spectrogram-info mt-2">
+                            <small class="text-muted">
+                              <i class="bi bi-info-circle me-1"></i>
+                              Shows frequency content over time for the original
+                              signal
+                            </small>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Output Spectrogram -->
+                      <div class="spectrogram-stack">
+                        <div class="graph-box">
+                          <div class="graph-header">
+                            <h5>
+                              <i
+                                class="bi bi-arrow-up-circle me-2 text-success"
+                              ></i>
+                              Output Spectrogram
+                              <span class="badge bg-success ms-2"
+                                >Processed</span
+                              >
+                            </h5>
+                          </div>
+                          <div
+                            id="outputSpectrogram"
+                            class="spectrogram-plot"
+                          ></div>
+                          <div class="spectrogram-info mt-2">
+                            <small class="text-muted">
+                              <i class="bi bi-info-circle me-1"></i>
+                              Shows frequency content over time for the
+                              processed signal
+                            </small>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Side - Band Controls -->
+            <div class="col-lg-4">
+              <div
+                class="control-panel-side"
+                data-aos="fade-left"
+                data-aos-delay="200"
+              >
+                <!-- Band Selection Section -->
+                <div class="band-selection-section mb-4">
+                  <div class="section-header mb-3">
+                    <h4 class="mb-0">
+                      <i class="bi bi-cursor me-2"></i>
+                      Band Selection
+                    </h4>
+                  </div>
+                  <div class="band-selection-controls">
+                    <div
+                      class="selected-band-info mb-3 p-3 bg-light rounded"
+                      id="selectedBandInfo"
+                      style="display: none"
+                    >
+                      <h6 class="mb-2">Selected Band:</h6>
+                      <div class="selected-band-details">
+                        <div class="row text-center">
+                          <div class="col-6">
+                            <small class="text-muted">Start</small>
+                            <div class="fw-bold" id="selectedStartFreq">
+                              0 Hz
+                            </div>
+                          </div>
+                          <div class="col-6">
+                            <small class="text-muted">End</small>
+                            <div class="fw-bold" id="selectedEndFreq">0 Hz</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      class="band-range-controls"
+                      id="bandRangeControls"
+                      style="display: none"
+                    >
+                      <div class="mb-3">
+                        <label class="form-label">Start Frequency:</label>
+                        <div class="range-input-group">
+                          <input
+                            type="range"
+                            class="form-range start-freq-slider"
+                            min="20"
+                            max="20000"
+                            step="10"
+                            value="1000"
+                          />
+                          <div class="range-value-display">
+                            <span class="range-value" id="startFreqValue"
+                              >1000 Hz</span
+                            >
+                          </div>
+                        </div>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">End Frequency:</label>
+                        <div class="range-input-group">
+                          <input
+                            type="range"
+                            class="form-range end-freq-slider"
+                            min="20"
+                            max="20000"
+                            step="10"
+                            value="2000"
+                          />
+                          <div class="range-value-display">
+                            <span class="range-value" id="endFreqValue"
+                              >2000 Hz</span
+                            >
+                          </div>
+                        </div>
+                      </div>
+                      <div class="frequency-visualization mt-3">
+                        <div class="freq-visual-bar">
+                          <div class="freq-visual-track">
+                            <div
+                              class="freq-visual-range"
+                              id="freqVisualRange"
+                            ></div>
+                          </div>
+                          <div
+                            class="freq-labels d-flex justify-content-between mt-1"
+                          >
+                            <small>20Hz</small>
+                            <small>20kHz</small>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Add this new gain controls section -->
+                    <div
+                      class="selected-gain-controls mt-3"
+                      id="selectedGainControls"
+                      style="display: none"
+                    >
+                      <div class="mb-3">
+                        <label class="form-label">Gain Control:</label>
+                        <div class="gain-control-group">
+                          <div class="gain-slider-container">
+                            <input
+                              type="range"
+                              class="form-range selected-gain-slider"
+                              min="0"
+                              max="2"
+                              step="0.1"
+                              value="1.0"
+                            />
+                            <div class="gain-value-display text-center mt-2">
+                              <span
+                                class="gain-value-badge"
+                                id="selectedGainValue"
+                                >1.0</span
+                              >
+                              <span class="gain-multiplier">×</span>
+                            </div>
+                          </div>
+                          <div
+                            class="gain-labels d-flex justify-content-between mt-1"
+                          >
+                            <small>0× (mute)</small>
+                            <small>1× (normal)</small>
+                            <small>2× (boost)</small>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div class="apply-controls mt-3">
+                        <button id="applyGain" class="btn btn-success w-100">
+                          <i class="bi bi-check-circle me-1"></i>Apply Gain
+                          Changes
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Frequency Bands Section -->
+                <div class="bands-section mb-4">
+                  <div
+                    class="section-header d-flex justify-content-between align-items-center mb-3"
+                  >
+                    <h4 class="mb-0">
+                      <i class="bi bi-sliders2-vertical me-2"></i>
+                      Frequency Bands
+                    </h4>
+                    <div class="band-management">
+                      <button id="addBand" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-circle me-1"></i>Add Band
+                      </button>
+                    </div>
+                  </div>
+                  <div id="bandsContainer" class="bands-container">
+                    <!-- Dynamic bands will be added here -->
+                  </div>
+                </div>
+
+                <!-- Processing Controls -->
+                <div class="processing-controls-section">
+                  <div class="section-header mb-3">
+                    <h4 class="mb-0">
+                      <i class="bi bi-gear me-2"></i>
+                      Processing Controls
+                    </h4>
+                  </div>
+                  <div class="processing-controls">
+                    <button
+                      id="processAudio"
+                      class="btn btn-success w-100 mb-2"
+                      disabled
+                    >
+                      <i class="bi bi-gear me-1"></i>Process Audio
+                    </button>
+                    <button
+                      id="exportAudio"
+                      class="btn btn-outline-success w-100"
+                    >
+                      <i class="bi bi-download me-1"></i>Export Processed Audio
+                    </button>
+                    <div
+                      class="processing-progress mt-2"
+                      style="display: none"
+                      id="processingProgress"
+                    >
+                      <div class="progress">
+                        <div
+                          class="progress-bar progress-bar-striped progress-bar-animated"
+                          role="progressbar"
+                          style="width: 0%"
+                        ></div>
+                      </div>
+                      <small class="text-muted mt-1">Processing audio...</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer id="footer" class="footer dark-background">
+      <div class="container footer-top">
+        <div class="row gy-4">
+          <div class="col-lg-4 col-md-6 footer-about">
+            <a href="index.html" class="logo d-flex align-items-center">
+              <span class="sitename">Signal Equalizer</span>
+            </a>
+            <div class="footer-contact pt-3">
+              <p>Audio Research Lab</p>
+              <p>University Campus</p>
+              <p class="mt-3">
+                <strong>Email:</strong> <span>support@signalequalizer.com</span>
+              </p>
+              <p><strong>Phone:</strong> <span>+1 5589 55488 55</span></p>
+            </div>
+            <div class="social-links d-flex mt-4">
+              <a href=""><i class="bi bi-twitter-x"></i></a>
+              <a href=""><i class="bi bi-facebook"></i></a>
+              <a href=""><i class="bi bi-instagram"></i></a>
+              <a href=""><i class="bi bi-linkedin"></i></a>
+            </div>
+          </div>
+
+          <div class="col-lg-2 col-md-3 footer-links">
+            <h4>Quick Links</h4>
+            <ul>
+              <li><a href="index.html">Home</a></li>
+              <li><a href="index.html#features">Features</a></li>
+              <li><a href="index.html#modes">Modes</a></li>
+              <li><a href="index.html#applications">Applications</a></li>
+              <li><a href="index.html#about">About</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-2 col-md-3 footer-links">
+            <h4>Processing Modes</h4>
+            <ul>
+              <li><a href="generic_mode.html">Generic Mode</a></li>
+              <li><a href="instruments_mode.html">Music Mode</a></li>
+              <li><a href="animals_mode.html">Animal Mode</a></li>
+              <li><a href="voices_mode.html">Voice Mode</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-4 col-md-12 footer-newsletter">
+            <h4>Our Newsletter</h4>
+            <p>
+              Subscribe to receive updates on new features and research
+              applications!
+            </p>
+            <form
+              action="forms/newsletter.php"
+              method="post"
+              class="php-email-form"
+            >
+              <div class="newsletter-form">
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Your email"
+                /><input type="submit" value="Subscribe" />
+              </div>
+              <div class="loading">Loading</div>
+              <div class="error-message"></div>
+              <div class="sent-message">
+                Your subscription request has been sent. Thank you!
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="container copyright text-center mt-4">
+        <p>
+          © <span>Copyright</span>
+          <strong class="px-1 sitename">Signal Equalizer</strong>
+          <span>All Rights Reserved</span>
+        </p>
+        <div class="credits">
+          Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Scroll Top -->
+    <a
+      href="#"
+      id="scroll-top"
+      class="scroll-top d-flex align-items-center justify-content-center"
+      ><i class="bi bi-arrow-up-short"></i
+    ></a>
+
+    <!-- Debug Panel -->
+    <div
+      id="debugPanel"
+      style="
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 12px;
+        z-index: 10000;
+        border: 1px solid #dee2e6;
+        max-width: 300px;
+      "
+    >
+      <strong>Debug Information</strong>
+      <div id="backendStatus">Checking backend connection...</div>
+      <div id="connectionDetails"></div>
+      <button
+        onclick="document.getElementById('debugPanel').style.display='none'"
+        class="btn btn-sm btn-outline-secondary mt-1"
+      >
+        Hide
+      </button>
     </div>
 
-    <div class="container copyright text-center mt-4">
-      <p>© <span>Copyright</span> <strong class="px-1 sitename">Signal Equalizer</strong> <span>All Rights Reserved</span></p>
-      <div class="credits">
-        Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
-      </div>
-    </div>
+    <!-- Vendor JS Files -->
+    <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/vendor/php-email-form/validate.js"></script>
+    <script src="assets/vendor/aos/aos.js"></script>
+    <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+    <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+    <script src="assets/vendor/purecounter/purecounter_vanilla.js"></script>
+    <script src="assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
+    <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
 
-  </footer>
-
-  <!-- Scroll Top -->
-  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
-
-  <!-- Debug Panel -->
-  <div id="debugPanel" style="position: fixed; bottom: 10px; left: 10px; background: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 12px; z-index: 10000; border: 1px solid #dee2e6; max-width: 300px;">
-    <strong>Debug Information</strong>
-    <div id="backendStatus">Checking backend connection...</div>
-    <div id="connectionDetails"></div>
-    <button onclick="document.getElementById('debugPanel').style.display='none'" class="btn btn-sm btn-outline-secondary mt-1">Hide</button>
-  </div>
-
-  <!-- Vendor JS Files -->
-  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="assets/vendor/php-email-form/validate.js"></script>
-  <script src="assets/vendor/aos/aos.js"></script>
-  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
-  <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
-  <script src="assets/vendor/purecounter/purecounter_vanilla.js"></script>
-  <script src="assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
-  <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
-
-  <!-- Main JS File -->
-  <script src="assets/js/main.js"></script>
-  <script src="assets/js/generic_mode.js"></script>
-
-</body>
-
+    <!-- Main JS File -->
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/generic_mode.js"></script>
+  </body>
 </html>
