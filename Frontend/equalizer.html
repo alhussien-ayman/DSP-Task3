@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signal Equalizer - Customized Modes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .slider-container {
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+        .slider-container:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        .frequency-bands {
+            font-size: 0.8em;
+            color: #6c757d;
+            margin-top: 5px;
+            font-family: monospace;
+        }
+        .visualization {
+            height: 300px;
+            margin: 10px 0;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+        }
+        .hidden {
+            display: none;
+        }
+        .mode-title {
+            color: #0d6efd;
+            font-weight: bold;
+        }
+        .slider-value {
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .animal-icon {
+            font-size: 1.2em;
+            margin-right: 8px;
+        }
+        .control-panel {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <h1 class="display-4">🎛️ Signal Equalizer</h1>
+                <p class="lead">Advanced Audio Processing with Customized Modes</p>
+            </div>
+        </div>
+
+        <!-- Mode Controls -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Mode Selection</h5>
+                        <select id="modeSelector" class="form-select">
+                            <option value="instruments">🎵 Musical Instruments</option>
+                            <option value="animals">🐾 Animal Sounds</option>
+                            <option value="voices">🎤 Human Voices</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Settings Management</h5>
+                        <div class="btn-group w-100">
+                            <input type="file" id="settingsFile" class="form-control hidden" accept=".json">
+                            <button id="uploadSettingsBtn" class="btn btn-outline-primary">📁 Upload JSON</button>
+                            <button id="downloadSettingsBtn" class="btn btn-outline-success">💾 Download JSON</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Left Column - Controls -->
+            <div class="col-lg-4">
+                <div class="control-panel">
+                    <h3 id="currentMode" class="mode-title mb-4">🎵 Musical Instruments</h3>
+                    
+                    <!-- Dynamic Sliders -->
+                    <div id="slidersContainer">
+                        <div class="alert alert-info">
+                            <strong>Welcome!</strong> Select a mode and upload audio to see the equalizer controls.
+                        </div>
+                    </div>
+
+                    <!-- Audio Controls -->
+                    <div class="card mt-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">🎵 Audio Input</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Upload Audio File</label>
+                                <input type="file" id="audioFile" class="form-control" accept=".wav,.mp3">
+                            </div>
+                            <button id="generateTestBtn" class="btn btn-success w-100">
+                                🎹 Generate Test Signal
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Display Settings -->
+                    <div class="card mt-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">📊 Display Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Frequency Scale</label>
+                                <select id="scaleSelector" class="form-select">
+                                    <option value="linear">📈 Linear Scale</option>
+                                    <option value="audiogram">👂 Audiogram Scale</option>
+                                </select>
+                            </div>
+                            <div class="form-text">
+                                <strong>Audiogram Scale:</strong> Mimics human hearing perception
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Visualizations -->
+            <div class="col-lg-8">
+                <div class="row">
+                    <div class="col-12 mb-4">
+                        <div class="card">
+                            <div class="card-header bg-warning text-dark">
+                                <h5 class="mb-0">📈 Signal Waveforms</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Input Signal</h6>
+                                        <canvas id="inputWaveform" class="visualization"></canvas>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Output Signal</h6>
+                                        <canvas id="outputWaveform" class="visualization"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">🌈 Spectrograms</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Input Spectrogram</h6>
+                                        <canvas id="inputSpectrogram" class="visualization"></canvas>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Output Spectrogram</h6>
+                                        <canvas id="outputSpectrogram" class="visualization"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">📖 How to Use</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <h6>🎯 Step 1: Select Mode</h6>
+                                <p>Choose between Musical Instruments, Animal Sounds, or Human Voices</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h6>🎵 Step 2: Upload Audio</h6>
+                                <p>Upload your mixed audio file or generate a test signal</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h6>🎛️ Step 3: Adjust Sliders</h6>
+                                <p>Use sliders to control individual sound sources (0=mute, 1=normal, 2=boost)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/equalizer.js') }}"></script>
+</body>
+</html>

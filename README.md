@@ -24,3 +24,4 @@ A comprehensive signal equalization and frequency manipulation application desig
 - [Contact](#contact)
 
 ---
+
