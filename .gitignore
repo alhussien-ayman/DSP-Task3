@@ -16,3 +16,4 @@ env/
 # VS Code / PyCharm / other IDEs
 .vscode/
 .idea/
+Backend/asteroid_model/
