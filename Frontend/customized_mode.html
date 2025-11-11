@@ -168,6 +168,9 @@
                     <button class="btn-cine" id="stopBtn">
                       <i class="bi bi-stop-fill"></i> Stop
                     </button>
+                    <button class="btn-cine" id="resetInputSignalBtn">
+                    <i class="bi bi-arrow-clockwise"></i> Reset
+                     </button>
                     <div class="speed-control">
                       <span>Speed:</span>
                       <input type="range" class="speed-slider" id="speedControl" min="0.5" max="2" step="0.1" value="1">
@@ -183,6 +186,9 @@
                 <div class="fourier-header">
                   <h4 class="section-title">Input Frequency Spectrum</h4>
                   <div class="scale-controls">
+                    <button class="btn-cine" id="resetInputFourierBtn">
+                     <i class="bi bi-arrow-clockwise"></i> Reset
+                    </button>
                     <button class="btn-scale active" id="inputLinearScale">Linear Scale</button>
                     <button class="btn-scale" id="inputAudiogramScale">Audiogram Scale</button>
                   </div>
@@ -198,6 +204,9 @@
                     <button class="btn-toggle active" id="inputSpectrogramToggle">
                       <i class="bi bi-eye-fill"></i> Hide Spectrogram
                     </button>
+                    <button class="btn-cine" id="resetInputSpectrogramBtn">
+                    <i class="bi bi-arrow-clockwise"></i> Reset
+                  </button>
                   </div>
                 </div>
                 <div class="spectrogram-grid" id="inputSpectrogramContainer">
@@ -223,6 +232,9 @@
                     <button class="btn-cine" id="resetViewBtn">
                       <i class="bi bi-arrow-clockwise"></i> Reset View
                     </button>
+                    <button class="btn-cine" id="resetOutputSignalBtn">
+                  <i class="bi bi-arrow-clockwise"></i> Reset
+                </button>
                   </div>
                 </div>
                 <div class="signal-plot" id="outputSignalPlot"></div>
@@ -233,6 +245,9 @@
                 <div class="fourier-header">
                   <h4 class="section-title">Output Frequency Spectrum</h4>
                   <div class="scale-controls">
+                    <button class="btn-cine" id="resetOutputFourierBtn">
+                    <i class="bi bi-arrow-clockwise"></i> Reset
+                    </button>
                     <button class="btn-scale active" id="outputLinearScale">Linear Scale</button>
                     <button class="btn-scale" id="outputAudiogramScale">Audiogram Scale</button>
                   </div>
@@ -247,6 +262,9 @@
                   <div class="toggle-controls">
                     <button class="btn-toggle active" id="outputSpectrogramToggle">
                       <i class="bi bi-eye-fill"></i> Hide Spectrogram
+                    </button>
+                    <button class="btn-cine" id="resetOutputSpectrogramBtn">
+                    <i class="bi bi-arrow-clockwise"></i> Reset
                     </button>
                   </div>
                 </div>

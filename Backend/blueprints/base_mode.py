@@ -116,6 +116,7 @@ class BaseMode:
         scale_type = processing_data['scale_type']
         
         print(f"⚙️ Processing parameters: {len(slider_values)} sliders, scale: {scale_type}")
+        print(f"🎯 BACKEND DEBUG: Scale type received: '{scale_type}'")  
         
         # Validate input
         if not settings.get('sliders'):

@@ -77,11 +77,22 @@ function init() {
     }
     
     // Test backend connection first
-    testBackendConnection().then(() => {
-        initializePlots();
-        setupEventListeners();
-        updateUIState();
-    });
+   // Setup event listeners first
+setupEventListeners();
+
+// Test backend connection
+testBackendConnection().then(() => {
+    initializePlots();
+    // Setup reset buttons after plots are initialized
+    setupResetButtons();
+    updateUIState();
+}).catch(error => {
+    console.error("Backend connection failed, continuing with limited functionality");
+    initializePlots();
+    // Setup reset buttons after plots are initialized
+    setupResetButtons();
+    updateUIState();
+});
     
     window.addEventListener('scroll', function() {
         const scrollTop = document.getElementById('scroll-top');
@@ -169,7 +180,99 @@ function setupEventListeners() {
     elements.resetBtn.addEventListener('click', resetEqualizer);
     elements.resetViewBtn.addEventListener('click', resetView);
     elements.saveSettingsBtn.addEventListener('click', saveSettings);
+   // Reset button event listeners - direct binding
+   
 }
+
+// Setup reset buttons with direct event listeners
+function setupResetButtons() {
+    console.log("🔧 Setting up reset buttons...");
+    
+    // Debug: Check if buttons exist
+    console.log("🔍 Checking reset buttons:");
+    const buttonIds = [
+        'resetInputSignalBtn', 'resetInputFourierBtn', 'resetInputSpectrogramBtn',
+        'resetOutputSignalBtn', 'resetOutputFourierBtn', 'resetOutputSpectrogramBtn'
+    ];
+    
+    buttonIds.forEach(id => {
+        const btn = document.getElementById(id);
+        console.log(`- ${id}:`, btn ? 'FOUND' : 'NOT FOUND');
+    });
+    
+    // Reset Input Signal
+    const resetInputSignalBtn = document.getElementById('resetInputSignalBtn');
+    if (resetInputSignalBtn) {
+        resetInputSignalBtn.addEventListener('click', function() {
+            console.log("🎯 resetInputSignalBtn CLICKED!");
+            resetInputSignal();
+        });
+        console.log("✅ resetInputSignalBtn event listener added");
+    } else {
+        console.log("❌ resetInputSignalBtn NOT FOUND");
+    }
+    
+    // Reset Input Fourier
+    const resetInputFourierBtn = document.getElementById('resetInputFourierBtn');
+    if (resetInputFourierBtn) {
+        resetInputFourierBtn.addEventListener('click', function() {
+            console.log("🎯 resetInputFourierBtn CLICKED!");
+            resetInputFourier();
+        });
+        console.log("✅ resetInputFourierBtn event listener added");
+    } else {
+        console.log("❌ resetInputFourierBtn NOT FOUND");
+    }
+    
+    // Reset Input Spectrogram
+    const resetInputSpectrogramBtn = document.getElementById('resetInputSpectrogramBtn');
+    if (resetInputSpectrogramBtn) {
+        resetInputSpectrogramBtn.addEventListener('click', function() {
+            console.log("🎯 resetInputSpectrogramBtn CLICKED!");
+            resetInputSpectrogram();
+        });
+        console.log("✅ resetInputSpectrogramBtn event listener added");
+    } else {
+        console.log("❌ resetInputSpectrogramBtn NOT FOUND");
+    }
+    
+    // Reset Output Signal
+    const resetOutputSignalBtn = document.getElementById('resetOutputSignalBtn');
+    if (resetOutputSignalBtn) {
+        resetOutputSignalBtn.addEventListener('click', function() {
+            console.log("🎯 resetOutputSignalBtn CLICKED!");
+            resetOutputSignal();
+        });
+        console.log("✅ resetOutputSignalBtn event listener added");
+    } else {
+        console.log("❌ resetOutputSignalBtn NOT FOUND");
+    }
+    
+    // Reset Output Fourier
+    const resetOutputFourierBtn = document.getElementById('resetOutputFourierBtn');
+    if (resetOutputFourierBtn) {
+        resetOutputFourierBtn.addEventListener('click', function() {
+            console.log("🎯 resetOutputFourierBtn CLICKED!");
+            resetOutputFourier();
+        });
+        console.log("✅ resetOutputFourierBtn event listener added");
+    } else {
+        console.log("❌ resetOutputFourierBtn NOT FOUND");
+    }
+    
+    // Reset Output Spectrogram
+    const resetOutputSpectrogramBtn = document.getElementById('resetOutputSpectrogramBtn');
+    if (resetOutputSpectrogramBtn) {
+        resetOutputSpectrogramBtn.addEventListener('click', function() {
+            console.log("🎯 resetOutputSpectrogramBtn CLICKED!");
+            resetOutputSpectrogram();
+        });
+        console.log("✅ resetOutputSpectrogramBtn event listener added");
+    } else {
+        console.log("❌ resetOutputSpectrogramBtn NOT FOUND");
+    }
+}
+  
 
 // Initialize empty Plotly charts
 function initializePlots() {
@@ -447,24 +550,29 @@ function updateInputVisualizations(result) {
         });
         console.log("✅ Input signal plot updated");
     }
-    
-    // Update input Fourier transform
-    if (result.input_spectrogram) {
-        Plotly.react('inputFourierPlot', [{
-            x: result.input_spectrogram.frequencies,
-            y: result.input_spectrogram.magnitudes,
-            type: 'scatter',
-            mode: 'lines',
-            line: { color: '#FF6B35', width: 2 },
-            name: 'Input Spectrum'
-        }], {
-            margin: { t: 10, r: 30, b: 50, l: 60 },
-            xaxis: { title: 'Frequency (Hz)' },
-            yaxis: { title: 'Magnitude' }
-        });
-        console.log("✅ Input frequency spectrum updated");
-    }
-    
+   
+   // Update input Fourier transform
+if (result.input_spectrogram) {
+    Plotly.react('inputFourierPlot', [{
+        x: result.input_spectrogram.frequencies,
+        y: result.input_spectrogram.magnitudes,
+        type: 'scatter',
+        mode: 'lines',
+        line: { color: '#FF6B35', width: 2 },
+        name: currentInputScale === 'audiogram' ? 'Input Audiogram' : 'Input Spectrum'
+    }], {
+        margin: { t: 10, r: 30, b: 50, l: 60 },
+        xaxis: { title: 'Frequency (Hz)' },
+        yaxis: { 
+            title: currentInputScale === 'audiogram' ? 'Relative Level (dB)' : 'Magnitude',  // ← CHANGED
+            gridcolor: '#f8f9fa',
+            linecolor: '#E9ECEF'
+        },
+        plot_bgcolor: '#FFFFFF',
+        paper_bgcolor: '#FFFFFF',
+        showlegend: false
+    });
+}
     // Update input spectrogram if 2D data is available
     if (result.input_spectrogram_2d && result.input_spectrogram_2d.z) {
         Plotly.react('inputSpectrogramPlot', [{
@@ -660,23 +768,29 @@ function updateOutputVisualizations(result) {
         });
         console.log("✅ Output signal plot updated");
     }
-    
-    // Update output Fourier transform
-    if (result.output_spectrogram) {
-        Plotly.react('outputFourierPlot', [{
-            x: result.output_spectrogram.frequencies,
-            y: result.output_spectrogram.magnitudes,
-            type: 'scatter',
-            mode: 'lines',
-            line: { color: '#E55A2B', width: 2 },
-            name: 'Output Spectrum'
-        }], {
-            margin: { t: 10, r: 30, b: 50, l: 60 },
-            xaxis: { title: 'Frequency (Hz)' },
-            yaxis: { title: 'Magnitude' }
-        });
-        console.log("✅ Output frequency spectrum updated");
-    }
+   
+   // Update output Fourier transform
+if (result.output_spectrogram) {
+    Plotly.react('outputFourierPlot', [{
+        x: result.output_spectrogram.frequencies,
+        y: result.output_spectrogram.magnitudes,
+        type: 'scatter',
+        mode: 'lines',
+        line: { color: '#E55A2B', width: 2 },
+        name: 'Output Spectrum'
+    }], {
+        margin: { t: 10, r: 30, b: 50, l: 60 },
+        xaxis: { title: 'Frequency (Hz)' },
+        yaxis: { 
+            title: 'Magnitude',  // ← CHANGE THIS LINE
+            gridcolor: '#f8f9fa',
+            linecolor: '#E9ECEF'
+        },
+        plot_bgcolor: '#FFFFFF',
+        paper_bgcolor: '#FFFFFF',
+        showlegend: false
+    });
+}
     
     // Update output spectrogram if 2D data is available
     if (result.output_spectrogram_2d && result.output_spectrogram_2d.z) {
@@ -945,18 +1059,147 @@ function resetEqualizer() {
     }
 }
 
-// Reset view
+// Reset view - now clears all graphs
 function resetView() {
     console.log("🔄 Resetting all views...");
-    // Reset plots to their default view
-    Plotly.relayout('inputSignalPlot', {});
-    Plotly.relayout('outputSignalPlot', {});
-    Plotly.relayout('inputFourierPlot', {});
-    Plotly.relayout('outputFourierPlot', {});
-    Plotly.relayout('inputSpectrogramPlot', {});
-    Plotly.relayout('outputSpectrogramPlot', {});
+    resetAllGraphs();
 }
 
+// Reset individual graph functions - SIMPLIFIED VERSION
+// Reset individual graph functions - CLEAR GRAPH VERSION
+function resetInputSignal() {
+    console.log("🔄 Clearing input signal plot...");
+    try {
+        Plotly.react('inputSignalPlot', [{
+            x: [], y: [], 
+            type: 'scatter', 
+            mode: 'lines',
+            line: { color: '#FF6B35', width: 1.5 },
+            name: 'Input Signal'
+        }], {
+            margin: { t: 10, r: 30, b: 50, l: 60 },
+            xaxis: { title: 'Time (s)' },
+            yaxis: { title: 'Amplitude' }
+        });
+        console.log("✅ Input signal plot cleared");
+    } catch (error) {
+        console.error("❌ Error clearing input signal:", error);
+    }
+}
+
+function resetInputFourier() {
+    console.log("🔄 Clearing input frequency spectrum...");
+    try {
+        Plotly.react('inputFourierPlot', [{
+            x: [], y: [], 
+            type: 'scatter', 
+            mode: 'lines',
+            line: { color: '#FF6B35', width: 2 },
+            name: 'Input Frequency Spectrum'
+        }], {
+            margin: { t: 10, r: 30, b: 50, l: 60 },
+            xaxis: { title: 'Frequency (Hz)' },
+            yaxis: { title: 'Magnitude' }
+        });
+        console.log("✅ Input frequency spectrum cleared");
+    } catch (error) {
+        console.error("❌ Error clearing input Fourier:", error);
+    }
+}
+
+function resetInputSpectrogram() {
+    console.log("🔄 Clearing input spectrogram...");
+    try {
+        Plotly.react('inputSpectrogramPlot', [{
+            z: [[]],
+            type: 'heatmap',
+            colorscale: 'Viridis',
+            showscale: true,
+            colorbar: { title: 'dB' },
+            name: 'Input Spectrogram'
+        }], {
+            margin: { t: 10, r: 30, b: 50, l: 60 },
+            xaxis: { title: 'Time (s)' },
+            yaxis: { title: 'Frequency (Hz)' }
+        });
+        console.log("✅ Input spectrogram cleared");
+    } catch (error) {
+        console.error("❌ Error clearing input spectrogram:", error);
+    }
+}
+
+function resetOutputSignal() {
+    console.log("🔄 Clearing output signal plot...");
+    try {
+        Plotly.react('outputSignalPlot', [{
+            x: [], y: [], 
+            type: 'scatter', 
+            mode: 'lines',
+            line: { color: '#E55A2B', width: 1.5 },
+            name: 'Output Signal'
+        }], {
+            margin: { t: 10, r: 30, b: 50, l: 60 },
+            xaxis: { title: 'Time (s)' },
+            yaxis: { title: 'Amplitude' }
+        });
+        console.log("✅ Output signal plot cleared");
+    } catch (error) {
+        console.error("❌ Error clearing output signal:", error);
+    }
+}
+
+function resetOutputFourier() {
+    console.log("🔄 Clearing output frequency spectrum...");
+    try {
+        Plotly.react('outputFourierPlot', [{
+            x: [], y: [], 
+            type: 'scatter', 
+            mode: 'lines',
+            line: { color: '#E55A2B', width: 2 },
+            name: 'Output Frequency Spectrum'
+        }], {
+            margin: { t: 10, r: 30, b: 50, l: 60 },
+            xaxis: { title: 'Frequency (Hz)' },
+            yaxis: { title: 'Magnitude' }
+        });
+        console.log("✅ Output frequency spectrum cleared");
+    } catch (error) {
+        console.error("❌ Error clearing output Fourier:", error);
+    }
+}
+
+function resetOutputSpectrogram() {
+    console.log("🔄 Clearing output spectrogram...");
+    try {
+        Plotly.react('outputSpectrogramPlot', [{
+            z: [[]],
+            type: 'heatmap',
+            colorscale: 'Hot',
+            showscale: true,
+            colorbar: { title: 'dB' },
+            name: 'Output Spectrogram'
+        }], {
+            margin: { t: 10, r: 30, b: 50, l: 60 },
+            xaxis: { title: 'Time (s)' },
+            yaxis: { title: 'Frequency (Hz)' }
+        });
+        console.log("✅ Output spectrogram cleared");
+    } catch (error) {
+        console.error("❌ Error clearing output spectrogram:", error);
+    }
+}
+
+// Reset ALL graphs at once
+function resetAllGraphs() {
+    console.log("🔄 Resetting ALL graphs...");
+    resetInputSignal();
+    resetInputFourier();
+    resetInputSpectrogram();
+    resetOutputSignal();
+    resetOutputFourier();
+    resetOutputSpectrogram();
+    console.log("✅ All graphs reset");
+}
 // Save settings
 function saveSettings() {
     const settings = {
