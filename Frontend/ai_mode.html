@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>AI Audio Separation - Signal Equalizer</title>
+  <meta name="description" content="AI-powered audio separation using state-of-the-art deep learning models">
+  <meta name="keywords" content="AI audio separation, music stems, voice isolation, Demucs, Asteroid">
+
+  <!-- Favicons -->
+  <link href="assets/img/logo.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="assets/css/main.css" rel="stylesheet">
+  <link href="assets/css/customized_mode.css" rel="stylesheet">
+
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+
+<body class="equalizer-page">
+
+  <header id="header" class="header d-flex align-items-center sticky-top">
+    <div class="container-fluid container-xl position-relative d-flex align-items-center">
+
+      <a href="index.html" class="logo d-flex align-items-center me-auto">
+        <img src="assets/img/logo2.png" alt="">
+        <span class="sitename">Signal Equalizer</span>
+      </a>
+
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="index.html#hero">Home</a></li>
+          <li><a href="index.html#features">Features</a></li>
+          <li><a href="index.html#modes">Modes</a></li>
+          <li><a href="index.html#applications">Applications</a></li>
+          <li><a href="index.html#about">About</a></li>
+          <li><a href="index.html#contact">Contact</a></li>
+        </ul>
+        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      </nav>
+
+      <a class="btn-getstarted" href="equalizer.html">Launch Equalizer</a>
+
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="container mt-5">
+      <div class="equalizer-container">
+        
+        <!-- Header -->
+        <div class="equalizer-header text-center mb-4">
+          <h1><i class="bi bi-robot"></i> AI Audio Separation</h1>
+          <p>State-of-the-art Deep Learning Models for Music & Voice Separation</p>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="card mb-4">
+          <div class="card-body">
+            <h5 class="card-title"><i class="bi bi-cloud-arrow-up"></i> Upload Audio File</h5>
+            <input type="file" id="audioFile" accept="audio/*" class="form-control mb-3">
+            <div id="fileInfo" class="text-muted small">No file selected</div>
+          </div>
+        </div>
+
+        <!-- Mode Selection -->
+        <div class="card mb-4">
+          <div class="card-body">
+            <h5 class="card-title"><i class="bi bi-cpu"></i> Select Separation Mode</h5>
+            <select class="form-select mb-3" id="aiModeSelect" disabled>
+              <option value="">Please upload audio first</option>
+            </select>
+
+            <!-- Music Settings -->
+            <div id="musicSettings" class="hidden">
+              <label class="form-label">Demucs Model:</label>
+              <select class="form-select mb-2" id="musicModel">
+                <option value="htdemucs">HT-Demucs (4 stems)</option>
+                <option value="htdemucs_6s" selected>HT-Demucs 6s (6 stems)</option>
+              </select>
+            </div>
+
+            <!-- Voice Settings -->
+            <div id="voiceSettings" class="hidden">
+              <label class="form-label">Number of Speakers:</label>
+              <select class="form-select mb-3" id="numSpeakers">
+                <option value="2" selected>2 Speakers</option>
+                <option value="3">3 Speakers</option>
+                <option value="4">4 Speakers</option>
+              </select>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="applyEnhancement" checked>
+                <label class="form-check-label" for="applyEnhancement">Apply Wiener Filter</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="noiseReduction" checked>
+                <label class="form-check-label" for="noiseReduction">Noise Reduction</label>
+              </div>
+            </div>
+
+            <button class="btn btn-primary mt-3" id="separateButton" disabled>
+              <i class="bi bi-cpu-fill"></i> Start Separation
+            </button>
+            
+            <!-- Progress Bar -->
+            <div class="progress mt-3 hidden" id="progressContainer">
+              <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                   role="progressbar" id="progressBar" style="width: 0%">0%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Original File -->
+        <div class="card mb-4 hidden" id="originalFileSection">
+          <div class="card-body">
+            <h5 class="card-title"><i class="bi bi-file-music"></i> Original Audio</h5>
+            <div class="d-flex align-items-center">
+              <i class="bi bi-music-note-beamed fs-3 me-3 text-primary"></i>
+              <div class="flex-grow-1">
+                <audio controls class="w-100" id="originalAudio"></audio>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title"><i class="bi bi-check-circle"></i> Separated Audio Files</h5>
+              <div id="audioFilesContainer"></div>
+              <button class="btn btn-success mt-3" id="downloadAllBtn">
+                <i class="bi bi-download"></i> Download All
+              </button>
+              <button class="btn btn-secondary mt-3" id="resetBtn">
+                <i class="bi bi-arrow-clockwise"></i> Reset
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <footer id="footer" class="footer dark-background">
+    <div class="container copyright text-center mt-4">
+      <p>© <span>2024</span> <strong class="px-1 sitename">Signal Equalizer</strong> <span>All Rights Reserved</span></p>
+    </div>
+  </footer>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center">
+    <i class="bi bi-arrow-up-short"></i>
+  </a>
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/aos/aos.js"></script>
+  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+
+  <!-- Main JS File -->
+  <script src="assets/js/main.js"></script>
+
+  <!-- AI Mode JS -->
+  <script src="assets/js/ai_mode.js"></script>
+
+  <style>
+    .hidden { display: none; }
+    .card { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .audio-file-item {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 10px;
+      background: #f8f9fa;
+    }
+    .audio-file-item:hover {
+      background: #e9ecef;
+    }
+  </style>
+
+</body>
+
+</html>

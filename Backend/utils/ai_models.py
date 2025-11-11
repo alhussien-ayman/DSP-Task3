@@ -35,8 +35,7 @@ class AIModelManager:
             try:
                 print("Loading Asteroid Multi-Decoder-DPRNN model from local repo...")
                 
-                # For Jupyter Notebook, use absolute path
-                asteroid_path = "/mnt/data/Code/web_workspace/DSP-Task3/Backend/asteroid_model/asteroid/egs/wsj0-mix-var/Multi-Decoder-DPRNN"
+                asteroid_path = "Backend/asteroid_model/asteroid/egs/wsj0-mix-var/Multi-Decoder-DPRNN"
                 
                 print(f"   Looking for model at: {asteroid_path}")
                 
@@ -130,14 +129,12 @@ class AIModelManager:
             num_stems = len(self.loaded_models.get(model_name, get_model(model_name)).sources)
             return (*([None] * num_stems), f"❌ Error: {str(e)}")
     
-    def separate_voices_with_asteroid(self, audio_path, num_speakers=2):
+    def separate_voices_with_asteroid(self, audio_path):
         """
         Separate voices using Asteroid Multi-Decoder-DPRNN
         
         Args:
-            audio_path: Path to audio file
-            num_speakers: Expected number of speakers (default: 2)
-            
+            audio_path: Path to audio file            
         Returns:
             tuple: (*voice_paths, message)
         """
@@ -224,12 +221,12 @@ if __name__ == "__main__":
     print("=" * 60)
     print("Testing Demucs 6-stem separation (music)")
     print("=" * 60)
-    result = ai_manager.separate_with_htdemucs(test_audio_music, 'htdemucs_6s')
-    if result[0]:
-        print("\n📁 Music Stems:")
-        labels = ["🥁 Drums", "🎸 Bass", "🎹 Other", "🎤 Vocals", "🎸 Guitar", "🎹 Piano"]
-        for label, path in zip(labels, result[:-1]):
-            print(f"  {label}: {path}")
+    # result = ai_manager.separate_with_htdemucs(test_audio_music, 'htdemucs_6s')
+    # if result[0]:
+    #     print("\n📁 Music Stems:")
+    #     labels = ["🥁 Drums", "🎸 Bass", "🎹 Other", "🎤 Vocals", "🎸 Guitar", "🎹 Piano"]
+    #     for label, path in zip(labels, result[:-1]):
+    #         print(f"  {label}: {path}")
     
     print("\n" + "=" * 60)
     print("Testing Asteroid voice separation")
