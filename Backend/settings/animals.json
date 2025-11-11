@@ -3,45 +3,32 @@
     {
       "name": "Cat",
       "frequency_bands": [
-        [571, 571],
-        [1142, 1208],
-        [1789, 1885],
-        [2513, 2513]
+        [1100, 1300],
+        [1700,1900]
       ],
       "description": "Feline vocalizations including meows and purrs across multiple frequency ranges"
     },
     {
       "name": "Cow",
       "frequency_bands": [
-        [266, 308],
-        [457, 459],
-        [765, 767],
-        [903, 919],
-        [1070, 1071]
+        [129, 281],
+        [468, 703],
+        [843, 1100]
       ],
       "description": "Bovine sounds including mooing with distinct low to mid-frequency components"
     },
     {
       "name": "Dog",
       "frequency_bands": [
-        [381, 391],
-        [424, 486],
-        [488, 508],
-        [754, 766],
-        [816, 847],
-        [883, 912],
-        [1195, 1219]
+        [281,468],
+        [703,843]
       ],
       "description": "Canine vocalizations including barks, whines, and howls across wide frequency spectrum"
     },
     {
-      "name": "Sheep",
+      "name": "Night Cricket",
       "frequency_bands": [
-        [196, 214],
-        [388, 428],
-        [981, 1070],
-        [2634, 2634],
-        [2710, 2722]
+        [2109, 2156]
       ],
       "description": "Ovine sounds including bleating with characteristic low and high-frequency components"
     }

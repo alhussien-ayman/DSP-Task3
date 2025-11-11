@@ -3,47 +3,33 @@
     {
       "name": "Flute",
       "frequency_bands": [
-        [552, 558],
-        [985, 991],
-        [1105, 1113]
+        [689,1119],
+        [1119,1781]
       ],
       "description": "Woodwind instrument with clear, pure tones"
     },
     {
-      "name": "Guitar",
+      "name": "Maracas",
       "frequency_bands": [
-        [218, 219],
-        [261, 262],
-        [292, 294],
-        [391, 394],
-        [523, 526],
-        [588, 590],
-        [785, 787]
+        [6000, 6500],
+        [6800, 7200]
       ],
       "description": "String instrument with multiple frequency bands"
     },
     {
       "name": "Piano",
       "frequency_bands": [
-        [90, 92],
-        [110, 115],
-        [130, 135],
-        [160, 170],
-        [190, 210],
-        [240, 260],
-        [280, 300],
-        [340, 360],
-        [380, 400]
+        [86,344],
+        [344,689]
+     
       ],
       "description": "Keyboard instrument with harmonic complexity across wide frequency range"
     },
     {
       "name": "Triangle",
       "frequency_bands": [
-        [3468, 3470],
-        [5624, 5624],
-        [6515, 6519],
-        [7655, 7662]
+        [2812, 2929],
+        [5601, 5671]
       ],
       "description": "Percussion instrument with high-frequency metallic tones"
     }

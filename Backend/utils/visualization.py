@@ -1,15 +1,44 @@
 import numpy as np
+from typing import List, Union
+from math import log10
 
 class VisualizationUtils:
     """Visualization utilities for signals and spectrograms"""
     
+   
     @staticmethod
-    def linear_to_audiogram(frequencies, values):
-        """Convert linear frequency scale to audiogram scale"""
-        print(f"🎧 Converting to audiogram scale: {len(frequencies)} frequency points")
-        # Audiogram uses logarithmic-like scale for human hearing
-        audiogram_freqs = 20 * (2 ** (frequencies / 1200))  # Simplified approximation
-        return audiogram_freqs, values
+    def linear_to_audiogram(
+        frequencies: Union[List[float], np.ndarray],
+        values: Union[List[float], np.ndarray]
+    ) -> dict:
+        """
+        Convert linear magnitude to audiogram (dB + dB HL).
+        • 20 * log10(magnitude) → dB
+        • Floor at -120 dB
+        • dB HL: 0 dB = peak
+
+        Returns dict with:
+            frequencies, magnitude, magnitude_db, magnitude_db_hl
+        """
+        freq = np.asarray(frequencies, dtype=float)
+        mag = np.asarray(values, dtype=float)
+
+        if freq.shape != mag.shape:
+            raise ValueError("frequencies and values must have the same length")
+
+        mag_safe = np.where(mag > 1e-10, mag, 1e-10)
+        magnitude_db = 20.0 * np.log10(mag_safe)
+        magnitude_db = np.clip(magnitude_db, -120.0, None)
+
+        peak_db = np.max(magnitude_db) if len(magnitude_db) > 0 else 0
+        magnitude_db_hl = magnitude_db - peak_db
+
+        return {
+            "frequencies": freq.tolist(),
+            "magnitude": mag.tolist(),
+            "magnitude_db": magnitude_db.tolist(),
+            "magnitude_db_hl": magnitude_db_hl.tolist(),
+    }
     
     @staticmethod
     def prepare_spectrogram_data(spectrogram, frequencies, scale='linear'):
@@ -24,16 +53,22 @@ class VisualizationUtils:
         
         if scale == 'audiogram':
             print("🔄 Converting to audiogram scale...")
-            frequencies, magnitudes = VisualizationUtils.linear_to_audiogram(frequencies, magnitudes)
+            audiogram_data = VisualizationUtils.linear_to_audiogram(frequencies, magnitudes)
+            # Return the dB HL values for audiogram display
+            result = {
+                'frequencies': audiogram_data['frequencies'],
+                'magnitudes': audiogram_data['magnitude_db_hl']  # Use dB HL values
+            }
+        else:
+            # Linear scale - return original magnitudes
+            result = {
+                'frequencies': frequencies.tolist(),
+                'magnitudes': magnitudes.tolist()
+            }
         
-        # Convert to list for JSON serialization
-        result = {
-            'frequencies': frequencies.tolist(),
-            'magnitudes': magnitudes.tolist()
-        }
-        print(f"✅ Spectrum data prepared: {len(result['frequencies'])} frequency points")
+        print(f"✅ Spectrum data prepared: {len(result['frequencies'])} frequency points, scale={scale}")
         return result
-    
+        
     @staticmethod
     def prepare_spectrogram_2d(spectrogram, time_axis, freq_axis):
         """Prepare 2D spectrogram data for heatmap visualization"""
