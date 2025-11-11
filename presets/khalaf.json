@@ -1,0 +1,36 @@
+{
+  "name": "khalaf",
+  "description": "Custom equalizer preset with 4 bands",
+  "bands": [
+    {
+      "id": 1762856958419.9482,
+      "startFreq": 20,
+      "endFreq": 250,
+      "gain": 0,
+      "bandwidth": 230
+    },
+    {
+      "id": 1762856958420.642,
+      "startFreq": 250,
+      "endFreq": 1000,
+      "gain": 1,
+      "bandwidth": 750
+    },
+    {
+      "id": 1762856958420.6335,
+      "startFreq": 1000,
+      "endFreq": 4000,
+      "gain": 1,
+      "bandwidth": 3000
+    },
+    {
+      "id": 1762856958421.1936,
+      "startFreq": 4000,
+      "endFreq": 18120,
+      "gain": 0,
+      "bandwidth": 14120
+    }
+  ],
+  "created_at": "2025-11-11T12:33:45.509690",
+  "version": "1.0"
+}

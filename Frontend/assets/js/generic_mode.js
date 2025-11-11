@@ -1357,87 +1357,142 @@ class GenericEqualizer {
     }
 
     async updateSpectrograms() {
-        if (!this.currentAudioFile) return;
+    if (!this.currentAudioFile) return;
 
+    try {
+        console.log('🎨 Computing spectrograms...');
+        
+        // Compute input spectrogram
+        const formData = new FormData();
+        formData.append('file', this.currentAudioFile);
+
+        const response = await fetch(`${this.baseURL}/compute_spectrogram`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (response.ok) {
+            const spectrogramData = await response.json();
+            this.updateSpectrogramPlot(this.inputSpectrogram, spectrogramData, 'Input Spectrogram');
+            console.log('✅ Input spectrogram computed');
+
+            // If processed audio exists, compute output spectrogram
+            if (this.processedAudioUrl) {
+                await this.computeOutputSpectrogram();
+            }
+        } else {
+            throw new Error(`Server returned ${response.status}`);
+        }
+        
+    } catch (error) {
+        console.error('❌ Error computing spectrogram:', error);
+        
+        // Fallback to client-side computation
         try {
-            console.log('🎨 Computing spectrograms (10-second limit)...');
+            console.log('🔄 Falling back to client-side computation...');
             
-            // Compute input spectrogram with time limit
-            const formData = new FormData();
-            formData.append('file', this.currentAudioFile);
-            formData.append('max_duration', '10'); // Send max duration to backend
-
-            const response = await fetch(`${this.baseURL}/compute_spectrogram`, {
-                method: 'POST',
-                body: formData
-            });
-
-            if (response.ok) {
-                const spectrogramData = await response.json();
-                this.updateSpectrogramPlot(this.inputSpectrogram, spectrogramData, 'Input Spectrogram');
-                console.log('✅ Input spectrogram computed (10s limit)');
-
-                // If processed audio exists, compute output spectrogram
-                if (this.processedAudioUrl) {
-                    await this.computeOutputSpectrogram();
+            if (this.audioData && this.sampleRate) {
+                const clientSideResult = this.computeSpectrogramClientSide(this.audioData, this.sampleRate);
+                console.log('✅ Client-side spectrogram computed');
+                
+                // Update the input spectrogram with client-side data
+                this.updateSpectrogramPlot(this.inputSpectrogram, clientSideResult, 'Input Spectrogram (Client-side)');
+                
+                // If we have processed audio, compute output spectrogram client-side too
+                if (this.processedAudioData) {
+                    const outputClientSideResult = this.computeSpectrogramClientSide(this.processedAudioData, this.sampleRate);
+                    this.updateSpectrogramPlot(this.outputSpectrogram, outputClientSideResult, 'Output Spectrogram (Client-side)');
                 }
             } else {
-                throw new Error('Spectrogram computation failed');
+                throw new Error("Audio data not available for client-side computation");
             }
-        } catch (error) {
-            console.error('❌ Error computing spectrogram:', error);
-            // Fallback to client-side computation without time limit
-            this.computeSpectrogramClientSide();
+        } catch (fallbackError) {
+            console.error('❌ Client-side fallback also failed:', fallbackError);
+            this.showNotification('Failed to compute spectrograms. Please try another file.', 'error');
         }
     }
-
+}
     async computeOutputSpectrogram() {
-        try {
-            const response = await fetch(this.processedAudioUrl);
-            const blob = await response.blob();
-            const processedFile = new File([blob], 'processed_audio.wav', { type: 'audio/wav' });
-            
-            const formData = new FormData();
-            formData.append('file', processedFile);
-            formData.append('max_duration', '10'); // Send max duration to backend
+    try {
+        if (!this.processedAudioUrl) {
+            console.log('No processed audio URL available');
+            return;
+        }
 
-            const spectrogramResponse = await fetch(`${this.baseURL}/compute_spectrogram`, {
-                method: 'POST',
-                body: formData
-            });
+        const response = await fetch(this.processedAudioUrl);
+        const blob = await response.blob();
+        const processedFile = new File([blob], 'processed_audio.wav', { type: 'audio/wav' });
+        
+        const formData = new FormData();
+        formData.append('file', processedFile);
 
-            if (spectrogramResponse.ok) {
-                const spectrogramData = await spectrogramResponse.json();
-                this.updateSpectrogramPlot(this.outputSpectrogram, spectrogramData, 'Output Spectrogram');
-                console.log('✅ Output spectrogram computed (10s limit)');
+        const spectrogramResponse = await fetch(`${this.baseURL}/compute_spectrogram`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (spectrogramResponse.ok) {
+            const spectrogramData = await spectrogramResponse.json();
+            this.updateSpectrogramPlot(this.outputSpectrogram, spectrogramData, 'Output Spectrogram');
+            console.log('✅ Output spectrogram computed');
+        } else {
+            // Fallback to client-side for output spectrogram
+            if (this.processedAudioData && this.sampleRate) {
+                const clientSideResult = this.computeSpectrogramClientSide(this.processedAudioData, this.sampleRate);
+                this.updateSpectrogramPlot(this.outputSpectrogram, clientSideResult, 'Output Spectrogram (Client-side)');
             }
-        } catch (error) {
-            console.error('❌ Error computing output spectrogram:', error);
+        }
+    } catch (error) {
+        console.error('❌ Error computing output spectrogram:', error);
+        // Fallback to client-side computation
+        if (this.processedAudioData && this.sampleRate) {
+            const clientSideResult = this.computeSpectrogramClientSide(this.processedAudioData, this.sampleRate);
+            this.updateSpectrogramPlot(this.outputSpectrogram, clientSideResult, 'Output Spectrogram (Client-side)');
         }
     }
-
-    updateSpectrogramPlot(plotElement, spectrogramData, title) {
-        // Ensure we only display up to 10 seconds
-        const maxTime = 10; // 10 seconds maximum
+}
+updateSpectrogramPlot(plotElement, spectrogramData, title) {
+    try {
+        console.log(`🎨 Updating spectrogram plot: ${title}`);
         
-        let displayTimes = spectrogramData.times;
-        let displaySpectrogram = spectrogramData.spectrogram;
+        // Extract data from the response structure
+        const spectrogram2d = spectrogramData.spectrogram_2d || spectrogramData;
+        const spectrum = spectrogramData.spectrum || {};
         
-        // Filter data to only include times up to 10 seconds
-        const timeLimitIndex = displayTimes.findIndex(time => time > maxTime);
-        if (timeLimitIndex !== -1) {
-            displayTimes = displayTimes.slice(0, timeLimitIndex);
-            displaySpectrogram = displaySpectrogram.map(row => row.slice(0, timeLimitIndex));
+        let zData, xData, yData;
+        
+        if (spectrogram2d.z && spectrogram2d.x && spectrogram2d.y) {
+            // New format from compute_spectrogram endpoint
+            zData = spectrogram2d.z;
+            xData = spectrogram2d.x;
+            yData = spectrogram2d.y;
+        } else {
+            // Fallback to old format or create dummy data
+            zData = [[0]];
+            xData = [0];
+            yData = [0];
         }
         
-        // Update the plot title to show time limit
-        const displayDuration = Math.min(Math.max(...displayTimes), maxTime);
-        const actualTitle = `${title} (${displayDuration.toFixed(1)}s)`;
-
+        // Limit data for performance if needed
+        const maxTimePoints = 100;
+        const maxFreqPoints = 100;
+        
+        if (xData.length > maxTimePoints) {
+            const timeStep = Math.ceil(xData.length / maxTimePoints);
+            xData = xData.filter((_, i) => i % timeStep === 0);
+            zData = zData.map(row => row.filter((_, i) => i % timeStep === 0));
+        }
+        
+        if (yData.length > maxFreqPoints) {
+            const freqStep = Math.ceil(yData.length / maxFreqPoints);
+            yData = yData.filter((_, i) => i % freqStep === 0);
+            zData = zData.filter((_, i) => i % freqStep === 0);
+        }
+        
         Plotly.react(plotElement, [{
-            z: displaySpectrogram,
-            x: displayTimes,
-            y: spectrogramData.frequencies,
+            z: zData,
+            x: xData,
+            y: yData,
             type: 'heatmap',
             colorscale: 'Viridis',
             showscale: true,
@@ -1447,19 +1502,30 @@ class GenericEqualizer {
             },
             hovertemplate: 'Time: %{x:.2f}s<br>Frequency: %{y:.0f}Hz<br>Magnitude: %{z:.2f} dB<extra></extra>'
         }], {
-            title: { text: '', font: { size: 14, color: '#6c757d' } },
+            title: { text: title, font: { size: 14, color: '#6c757d' } },
+            margin: { t: 40, r: 30, b: 50, l: 60 },
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: { color: '#6c757d' },
             xaxis: { 
-                title: 'Time (s)',
-                range: [0, displayDuration] // Set x-axis range to match displayed duration
+                title: { text: 'Time (s)', font: { color: '#6c757d' } },
+                showgrid: true,
+                gridcolor: 'rgba(128,128,128,0.1)'
             },
             yaxis: { 
-                title: 'Frequency (Hz)', 
-                type: 'log'
+                title: { text: 'Frequency (Hz)', font: { color: '#6c757d' } }, 
+                type: 'log',
+                showgrid: true,
+                gridcolor: 'rgba(128,128,128,0.1)'
             }
         });
         
-        console.log(`✅ ${title} updated - Displaying ${displayDuration.toFixed(1)} seconds`);
+        console.log(`✅ ${title} updated successfully`);
+        
+    } catch (error) {
+        console.error(`❌ Error updating spectrogram plot:`, error);
     }
+}
 
     async generateTestSignal() {
         this.showNotification('Generating test signal...', 'info');
@@ -2138,6 +2204,102 @@ class GenericEqualizer {
             }
         }, 5000);
     }
+    computeSpectrogramClientSide(audioData, sampleRate) {
+    console.log("🖥️ Computing spectrogram client-side as fallback...");
+    
+    const windowSize = 1024;
+    const hopSize = 512;
+    
+    try {
+        // Simple client-side spectrogram computation
+        const spectrogram = [];
+        const timeAxis = [];
+        const freqAxis = [];
+        
+        // Calculate frequency axis (only positive frequencies)
+        for (let i = 0; i < windowSize / 2; i++) {
+            freqAxis.push(i * sampleRate / (2 * windowSize));
+        }
+        
+        // Process audio in windows
+        for (let start = 0; start + windowSize <= audioData.length; start += hopSize) {
+            const window = audioData.slice(start, start + windowSize);
+            
+            // Apply Hanning window
+            const windowed = window.map((sample, i) => 
+                sample * (0.5 - 0.5 * Math.cos(2 * Math.PI * i / (windowSize - 1)))
+            );
+            
+            // Simple magnitude calculation (simplified FFT)
+            const magnitudes = new Array(windowSize / 2);
+            for (let i = 0; i < windowSize / 2; i++) {
+                magnitudes[i] = Math.abs(windowed[i]) || 0.001;
+            }
+            
+            spectrogram.push(magnitudes);
+            timeAxis.push(start / sampleRate);
+        }
+        
+        // Convert to 2D format for visualization
+        const spectrogram2D = {
+            z: this.magnitudesToDB(spectrogram),
+            x: timeAxis,
+            y: freqAxis
+        };
+        
+        // Calculate average spectrum
+        const spectrum = this.calculateAverageSpectrum(spectrogram, freqAxis);
+        
+        return {
+            spectrogram_2d: spectrogram2D,
+            spectrum: spectrum,
+            sample_rate: sampleRate,
+            duration: audioData.length / sampleRate,
+            method: 'client_side_fallback'
+        };
+        
+    } catch (error) {
+        console.error("❌ Client-side spectrogram failed:", error);
+        throw error;
+    }
+}
+
+magnitudesToDB(spectrogram) {
+    // Transpose the spectrogram for Plotly heatmap format
+    const transposed = [];
+    const numFreqBins = spectrogram[0].length;
+    const numTimeFrames = spectrogram.length;
+    
+    for (let freqBin = 0; freqBin < numFreqBins; freqBin++) {
+        const column = [];
+        for (let timeFrame = 0; timeFrame < numTimeFrames; timeFrame++) {
+            const magnitude = spectrogram[timeFrame][freqBin] || 0.001;
+            column.push(20 * Math.log10(magnitude));
+        }
+        transposed.push(column);
+    }
+    
+    return transposed;
+}
+
+calculateAverageSpectrum(spectrogram, freqAxis) {
+    const avgMagnitudes = new Array(spectrogram[0].length).fill(0);
+    
+    spectrogram.forEach(frame => {
+        frame.forEach((mag, i) => {
+            avgMagnitudes[i] += mag;
+        });
+    });
+    
+    avgMagnitudes.forEach((mag, i) => {
+        avgMagnitudes[i] = mag / spectrogram.length;
+    });
+    
+    return {
+        frequencies: freqAxis,
+        magnitudes: avgMagnitudes
+    };
+}
 }
 
 // Initialize the application when the page loads
@@ -2159,3 +2321,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     console.log('✅ Generic Equalizer started successfully!');
 });
+
+
+//===============================================================================================
