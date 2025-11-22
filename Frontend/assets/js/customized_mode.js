@@ -36,6 +36,8 @@ const elements = {
     stopBtn: document.getElementById('stopBtn'),
     speedControl: document.getElementById('speedControl'),
     speedValue: document.getElementById('speedValue'),
+     speedControlOutput: document.getElementById('speedControlOutput'),
+    speedValueOutput: document.getElementById('speedValueOutput'),
     inputLinearScale: document.getElementById('inputLinearScale'),
     inputAudiogramScale: document.getElementById('inputAudiogramScale'),
     outputLinearScale: document.getElementById('outputLinearScale'),
@@ -44,7 +46,6 @@ const elements = {
     outputSpectrogramToggle: document.getElementById('outputSpectrogramToggle'),
     downloadBtn: document.getElementById('downloadBtn'),
     resetBtn: document.getElementById('resetBtn'),
-    resetViewBtn: document.getElementById('resetViewBtn'),
     saveSettingsBtn: document.getElementById('saveSettingsBtn')
 };
 
@@ -164,6 +165,7 @@ function setupEventListeners() {
     
     // Speed control
     elements.speedControl.addEventListener('input', (e) => setSpeed(e.target.value));
+    elements.speedControlOutput.addEventListener('input', (e) => setSpeed(e.target.value));
     
     // Scale controls
     elements.inputLinearScale.addEventListener('click', () => setInputScale('linear'));
@@ -178,7 +180,6 @@ function setupEventListeners() {
     // Output controls
     elements.downloadBtn.addEventListener('click', downloadOutput);
     elements.resetBtn.addEventListener('click', resetEqualizer);
-    elements.resetViewBtn.addEventListener('click', resetView);
     elements.saveSettingsBtn.addEventListener('click', saveSettings);
    // Reset button event listeners - direct binding
    
@@ -427,6 +428,7 @@ function updateUIState() {
         elements.pauseBtn.disabled = false;
         elements.stopBtn.disabled = false;
         elements.speedControl.disabled = false;
+          elements.speedControlOutput.disabled = false;
         elements.inputLinearScale.disabled = false;
         elements.inputAudiogramScale.disabled = false;
         
@@ -443,6 +445,7 @@ function updateUIState() {
         elements.pauseBtn.disabled = true;
         elements.stopBtn.disabled = true;
         elements.speedControl.disabled = true;
+        elements.speedControlOutput.disabled = true;
         elements.inputLinearScale.disabled = true;
         elements.inputAudiogramScale.disabled = true;
         elements.outputLinearScale.disabled = true;
@@ -816,7 +819,9 @@ if (result.output_spectrogram) {
     // Enable output controls
     elements.playOutputBtn.disabled = false;
     elements.downloadBtn.disabled = false;
-    elements.resetViewBtn.disabled = false;
+    elements.outputLinearScale.disabled = false;
+    elements.outputAudiogramScale.disabled = false;
+     elements.speedControlOutput.disabled = false;
     elements.outputLinearScale.disabled = false;
     elements.outputAudiogramScale.disabled = false;
     
@@ -907,6 +912,11 @@ function stopSignal() {
 function setSpeed(speed) {
     playbackRate = parseFloat(speed);
     elements.speedValue.textContent = `${speed}x`;
+    elements.speedValueOutput.textContent = `${speed}x`;
+
+        elements.speedControl.value = speed;
+    elements.speedControlOutput.value = speed;
+
     console.log(`🎚️ Playback speed set to ${speed}x`);
     
     if (playbackSource && isPlaying) {
@@ -1059,11 +1069,6 @@ function resetEqualizer() {
     }
 }
 
-// Reset view - now clears all graphs
-function resetView() {
-    console.log("🔄 Resetting all views...");
-    resetAllGraphs();
-}
 
 // Reset individual graph functions - SIMPLIFIED VERSION
 // Reset individual graph functions - CLEAR GRAPH VERSION

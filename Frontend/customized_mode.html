@@ -229,12 +229,15 @@
                     <button class="btn-cine" id="playOutputBtn">
                       <i class="bi bi-play-fill"></i> Play
                     </button>
-                    <button class="btn-cine" id="resetViewBtn">
-                      <i class="bi bi-arrow-clockwise"></i> Reset View
-                    </button>
+
                     <button class="btn-cine" id="resetOutputSignalBtn">
                   <i class="bi bi-arrow-clockwise"></i> Reset
                 </button>
+                  <div class="speed-control">
+                  <span>Speed:</span>
+                  <input type="range" class="speed-slider" id="speedControlOutput" min="0.5" max="2" step="0.1" value="1">
+                  <span id="speedValueOutput">1.0x</span>
+                  </div>
                   </div>
                 </div>
                 <div class="signal-plot" id="outputSignalPlot"></div>
@@ -277,9 +280,6 @@
               <div class="output-controls">
                 <button class="btn-control" id="downloadBtn">
                   <i class="bi bi-download"></i> Download Output
-                </button>
-                <button class="btn-control" id="resetBtn">
-                  <i class="bi bi-arrow-clockwise"></i> Reset All
                 </button>
                 <button class="btn-control" id="saveSettingsBtn">
                   <i class="bi bi-save"></i> Save Settings
