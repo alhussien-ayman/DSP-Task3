@@ -498,7 +498,7 @@ def compute_spectrogram():
         import traceback
         print(f"🔍 Full traceback: {traceback.format_exc()}")
         return jsonify({'error': f'Spectrogram computation failed: {str(e)}'}), 500
-    
+  
 @generic_bp.route('/health', methods=['GET'])
 def health():
     """Health check endpoint"""
@@ -512,7 +512,6 @@ def health():
         'fft_type': 'custom'
     })
 
-# =====================================================
 @generic_bp.route('/analyze_audio', methods=['POST'])
 def analyze_audio():
     """Comprehensive audio analysis using custom FFT"""
@@ -622,7 +621,6 @@ def analyze_audio():
         print(f"❌ Audio analysis error: {e}")
         return jsonify({'error': f'Audio analysis failed: {str(e)}'}), 500
     
-#==============================
 @generic_bp.route('/get_audio_waveform', methods=['POST'])
 def get_audio_waveform():
     """Extract audio waveform data for plotting"""
@@ -677,7 +675,6 @@ def get_audio_waveform():
         print(f"❌ Waveform extraction error: {e}")
         return jsonify({'error': f'Waveform extraction failed: {str(e)}'}), 500
 
-#==================================================================
 def read_audio_file(file):
     """
     Read audio file with automatic format detection
@@ -741,22 +738,44 @@ def read_audio_file(file):
         
         else:
             raise Exception(f"Unsupported file format: {file_ext}")
+        
+        
+#======================================================================================================
+import math
 def apply_equalizer_custom_fft(audio, sample_rate, bands):
     """
-    Simplified equalizer using numpy FFT for stability
+    Robust equalizer using CUSTOM FFT with length consistency
     """
-    n = len(audio)
+    n_original = len(audio)
     
-    print(f"🔧 Starting equalizer: {len(audio)} samples, {sample_rate}Hz, {len(bands)} bands")
+    print(f"🔧 Starting equalizer: {n_original} samples, {sample_rate}Hz, {len(bands)} bands")
     
-    # Use numpy FFT for stability
-    fft_data = np.fft.fft(audio)
-    frequencies = np.fft.fftfreq(n, d=1/sample_rate)
+    # Ensure audio length is compatible with custom FFT (power of 2)
+    next_power = 2 ** math.ceil(math.log2(n_original))
+    if n_original != next_power:
+        print(f"📏 Padding audio from {n_original} to {next_power} (power of 2)")
+        audio_padded = np.pad(audio, (0, next_power - n_original))
+        n_fft = next_power
+    else:
+        audio_padded = audio
+        n_fft = n_original
     
-    print(f"✅ FFT computed: {len(fft_data)} frequency bins")
+    # Use CUSTOM FFT for forward transform
+    print("🌀 Computing FFT with custom implementation...")
+    fft_data = np.array(SignalProcessor.custom_fft(audio_padded))
+    
+    # Generate frequencies
+    frequencies = np.zeros(n_fft)
+    for k in range(n_fft):
+        if k <= n_fft // 2:
+            frequencies[k] = k * sample_rate / n_fft
+        else:
+            frequencies[k] = (k - n_fft) * sample_rate / n_fft
+    
+    print(f"✅ Custom FFT computed: {n_fft} frequency bins")
     
     # Create gain profile
-    gain_profile = np.ones(n, dtype=np.float64)
+    gain_profile = np.ones(n_fft, dtype=np.float64)
     
     # Apply each band
     for band in bands:
@@ -767,10 +786,7 @@ def apply_equalizer_custom_fft(audio, sample_rate, bands):
         if abs(gain - 1.0) < 0.001:
             continue
             
-        # Find indices in this frequency range (consider both positive and negative frequencies)
         band_mask = (np.abs(frequencies) >= start_freq) & (np.abs(frequencies) <= end_freq)
-        
-        # Apply gain with simple transition
         gain_profile[band_mask] *= gain
         
         print(f"🎛️ Band {start_freq}-{end_freq}Hz: gain {gain}, {np.sum(band_mask)} bins affected")
@@ -779,7 +795,15 @@ def apply_equalizer_custom_fft(audio, sample_rate, bands):
     modified_fft = fft_data * gain_profile
     
     # Inverse FFT
-    processed_audio = np.real(np.fft.ifft(modified_fft))
+    print("🔄 Computing inverse FFT...")
+    try:
+        processed_audio_padded = np.real(np.array(SignalProcessor.custom_ifft(modified_fft)))
+        # Trim back to original length
+        processed_audio = processed_audio_padded[:n_original]
+    except Exception as e:
+        print(f"⚠️ Custom IFFT failed: {e}, falling back to numpy IFFT")
+        processed_audio_padded = np.real(np.fft.ifft(modified_fft))
+        processed_audio = processed_audio_padded[:n_original]
     
     # Normalize
     if np.max(np.abs(processed_audio)) > 0:
@@ -787,6 +811,7 @@ def apply_equalizer_custom_fft(audio, sample_rate, bands):
     
     print(f"✅ Equalizer completed. Output: {len(processed_audio)} samples")
     return processed_audio
+#====================================================================================
 # Default presets creation
 def create_default_presets():
     """Create some default presets if none exist"""

@@ -46,20 +46,6 @@ class AudioUtils:
         
         return buffer
     
-    @staticmethod
-    def generate_test_signal(frequencies, duration=3.0, sample_rate=44100):
-        """Generate synthetic test signal"""
-        t = np.linspace(0, duration, int(sample_rate * duration), endpoint=False)
-        signal = np.zeros_like(t)
-        
-        for freq in frequencies:
-            signal += np.sin(2 * np.pi * freq * t)
-        
-        # Normalize
-        if np.max(np.abs(signal)) > 0:
-            signal = signal / np.max(np.abs(signal))
-        
-        return signal, sample_rate
     
     @staticmethod
     def load_mode_settings(mode_name):

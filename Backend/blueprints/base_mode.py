@@ -66,24 +66,7 @@ class BaseMode:
                 print(f"❌ Error in process_audio: {str(e)}")
                 return jsonify({'success': False, 'error': str(e)}), 500
         
-        @bp.route('/test_signal', methods=['POST'])
-        def generate_test_signal():
-            """Generate test signal - COMMON for all modes"""
-            try:
-                data = request.json
-                frequencies = data.get('frequencies', [100, 500, 1000, 2000])
-                
-                signal, sample_rate = AudioUtils.generate_test_signal(frequencies)
-                buffer = AudioUtils.save_audio_to_buffer(signal, sample_rate)
-                
-                return send_file(
-                    buffer,
-                    mimetype='audio/wav',
-                    as_attachment=True,
-                    download_name=f'test_signal_{self.mode_name}.wav'
-                )
-            except Exception as e:
-                return jsonify({'error': str(e)}), 500
+        
     
     def load_settings(self):
         """Load settings - Can be overridden by specific modes"""

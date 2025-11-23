@@ -539,20 +539,43 @@ class GenericEqualizer {
             this.stopOutput();
         });
 
-        // Speed controls
-        document.getElementById('inputSpeed').addEventListener('change', (e) => {
-            this.inputPlaybackSpeed = parseFloat(e.target.value);
-            if (this.inputSource) {
-                this.inputSource.playbackRate.value = this.inputPlaybackSpeed;
-            }
-        });
+        // Speed controls SYNCHRONIZED
+document.getElementById('inputSpeed').addEventListener('change', (e) => {
+    if (this.syncingSpeed) return;
+    this.syncingSpeed = true;
 
-        document.getElementById('outputSpeed').addEventListener('change', (e) => {
-            this.outputPlaybackSpeed = parseFloat(e.target.value);
-            if (this.outputSource) {
-                this.outputSource.playbackRate.value = this.outputPlaybackSpeed;
-            }
-        });
+    const value = parseFloat(e.target.value);
+    this.inputPlaybackSpeed = value;
+    this.outputPlaybackSpeed = value;
+
+    // Update audio nodes
+    if (this.inputSource) this.inputSource.playbackRate.value = value;
+    if (this.outputSource) this.outputSource.playbackRate.value = value;
+
+    // Update UI slider for output
+    document.getElementById('outputSpeed').value = value;
+
+    this.syncingSpeed = false;
+});
+
+document.getElementById('outputSpeed').addEventListener('change', (e) => {
+    if (this.syncingSpeed) return;
+    this.syncingSpeed = true;
+
+    const value = parseFloat(e.target.value);
+    this.outputPlaybackSpeed = value;
+    this.inputPlaybackSpeed = value;
+
+    // Update audio nodes
+    if (this.outputSource) this.outputSource.playbackRate.value = value;
+    if (this.inputSource) this.inputSource.playbackRate.value = value;
+
+    // Update UI slider for input
+    document.getElementById('inputSpeed').value = value;
+
+    this.syncingSpeed = false;
+});
+
 
         // Timeline slider
         document.getElementById('timelineSlider').addEventListener('input', (e) => {
@@ -2322,5 +2345,3 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('✅ Generic Equalizer started successfully!');
 });
 
-
-//===============================================================================================
