@@ -130,17 +130,14 @@
                 </div>
               </div>
 
-              <!-- Apply Button -->
-              <div class="apply-section">
-                <button class="btn-apply" id="applyButton">
-                  <i class="bi bi-gear-fill"></i> Apply Signal Processing
-                </button>
-                <div class="mt-2 text-center">
-                  <span class="status-indicator status-disabled" id="processStatus">
-                    <i class="bi bi-hourglass-split"></i> Ready for processing
-                  </span>
-                </div>
+                        <!-- Process Status -->
+            <div class="process-status-section mt-3">
+              <div class="text-center">
+                <span class="status-indicator status-disabled" id="processStatus">
+                  <i class="bi bi-hourglass-split"></i> Ready for processing
+                </span>
               </div>
+            </div>
             </div>
 
           </div>
@@ -164,9 +161,6 @@
                     </button>
                     <button class="btn-cine" id="pauseBtn">
                       <i class="bi bi-pause-fill"></i> Pause
-                    </button>
-                    <button class="btn-cine" id="stopBtn">
-                      <i class="bi bi-stop-fill"></i> Stop
                     </button>
                     <button class="btn-cine" id="resetInputSignalBtn">
                     <i class="bi bi-arrow-clockwise"></i> Reset
@@ -229,7 +223,9 @@
                     <button class="btn-cine" id="playOutputBtn">
                       <i class="bi bi-play-fill"></i> Play
                     </button>
-
+                  <button class="btn-cine" id="pauseOutputBtn">
+                      <i class="bi bi-pause-fill"></i> Pause
+                    </button>
                     <button class="btn-cine" id="resetOutputSignalBtn">
                   <i class="bi bi-arrow-clockwise"></i> Reset
                 </button>
