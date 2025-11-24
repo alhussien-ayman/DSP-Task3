@@ -410,9 +410,7 @@
                       max="1000"
                       value="0"
                     />
-                    <div
-                      class="timeline-labels d-flex justify-content-between"
-                    >
+                    <div class="timeline-labels d-flex justify-content-between">
                       <small>0.00s</small>
                       <small id="currentTime">0.00s</small>
                       <small id="totalTime">0.00s</small>
@@ -422,162 +420,83 @@
               </div>
             </div>
           </div>
-
-          <!-- Equalizer Controls and Frequency Spectrum Section -->
-          <div class="row mb-4">
-            <!-- Left Side - Band Controls and Frequency Bands -->
-            <div class="col-lg-4">
+          <!-- Full Width Equalizer Bands Section -->
+          <div class="row">
+            <div class="col-12">
               <div
-                class="control-panel-side"
-                data-aos="fade-right"
-                data-aos-delay="100"
+                class="equalizer-bands-section"
+                data-aos="fade-up"
+                data-aos-delay="300"
               >
-                <!-- Band Selection Section -->
-                <div class="band-selection-section mb-4">
-                  <div class="section-header mb-3">
+                <div class="control-panel-full">
+                  <div class="section-header mb-4">
                     <h4 class="mb-0">
-                      <i class="bi bi-cursor me-2"></i>
-                      Band Selection
+                      <i class="bi bi-sliders2-vertical me-2"></i>
+                      Equalizer Bands
                     </h4>
+                    <div class="real-time-toggle">
+                      <div class="form-check form-switch">
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          id="realTimeProcessing"
+                          checked
+                        />
+                        <label
+                          class="form-check-label"
+                          for="realTimeProcessing"
+                        >
+                          <i class="bi bi-lightning-charge me-1"></i>Real-time
+                          Processing
+                        </label>
+                      </div>
+                      <small class="text-muted">Changes apply instantly</small>
+                    </div>
                   </div>
-                  <div class="band-selection-controls">
-                    <div
-                      class="selected-band-info mb-3 p-3 bg-light rounded"
-                      id="selectedBandInfo"
-                      style="display: none"
-                    >
-                      <h6 class="mb-2">Selected Band:</h6>
-                      <div class="selected-band-details">
-                        <div class="row text-center">
-                          <div class="col-6">
-                            <small class="text-muted">Start</small>
-                            <div class="fw-bold" id="selectedStartFreq">
-                              0 Hz
-                            </div>
-                          </div>
-                          <div class="col-6">
-                            <small class="text-muted">End</small>
-                            <div class="fw-bold" id="selectedEndFreq">0 Hz</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      class="band-range-controls"
-                      id="bandRangeControls"
-                      style="display: none"
-                    >
-                      <div class="mb-3">
-                        <label class="form-label">Start Frequency:</label>
-                        <div class="range-input-group">
-                          <input
-                            type="range"
-                            class="form-range start-freq-slider"
-                            min="20"
-                            max="20000"
-                            step="10"
-                            value="1000"
-                          />
-                          <div class="range-value-display">
-                            <span class="range-value" id="startFreqValue"
-                              >1000 Hz</span
-                            >
-                          </div>
-                        </div>
-                      </div>
-                      <div class="mb-3">
-                        <label class="form-label">End Frequency:</label>
-                        <div class="range-input-group">
-                          <input
-                            type="range"
-                            class="form-range end-freq-slider"
-                            min="20"
-                            max="20000"
-                            step="10"
-                            value="2000"
-                          />
-                          <div class="range-value-display">
-                            <span class="range-value" id="endFreqValue"
-                              >2000 Hz</span
-                            >
-                          </div>
-                        </div>
-                      </div>
-                      <div class="frequency-visualization mt-3">
-                        <div class="freq-visual-bar">
-                          <div class="freq-visual-track">
-                            <div
-                              class="freq-visual-range"
-                              id="freqVisualRange"
-                            ></div>
-                          </div>
-                          <div
-                            class="freq-labels d-flex justify-content-between mt-1"
-                          >
-                            <small>20Hz</small>
-                            <small>20kHz</small>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
 
-                    <!-- Gain controls section -->
-                    <div
-                      class="selected-gain-controls mt-3"
-                      id="selectedGainControls"
-                      style="display: none"
-                    >
-                      <div class="mb-3">
-                        <label class="form-label">Gain Control:</label>
-                        <div class="gain-control-group">
-                          <div class="gain-slider-container">
-                            <input
-                              type="range"
-                              class="form-range selected-gain-slider"
-                              min="0"
-                              max="2"
-                              step="0.1"
-                              value="1.0"
-                            />
-                            <div class="gain-value-display text-center mt-2">
-                              <span
-                                class="gain-value-badge"
-                                id="selectedGainValue"
-                                >1.0</span
-                              >
-                              <span class="gain-multiplier">×</span>
-                            </div>
-                          </div>
-                          <div
-                            class="gain-labels d-flex justify-content-between mt-1"
-                          >
-                            <small>0× (mute)</small>
-                            <small>1× (normal)</small>
-                            <small>2× (boost)</small>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div class="apply-controls mt-3">
-                        <button id="applyGain" class="btn btn-success w-100">
-                          <i class="bi bi-check-circle me-1"></i>Apply Gain
-                          Changes
+                  <!-- Small Buttons Above Sliders -->
+                  <div class="row mb-3">
+                    <div class="col-md-6">
+                      <div class="add-band-section">
+                        <button
+                          id="addBand"
+                          class="btn btn-outline-primary btn-sm w-100"
+                        >
+                          <i class="bi bi-plus-circle me-1"></i>Add Band
                         </button>
                       </div>
                     </div>
+                    <div class="col-md-6">
+                      <button
+                        id="exportAudio"
+                        class="btn btn-outline-success btn-sm w-100"
+                      >
+                        <i class="bi bi-download me-1"></i>Export Audio
+                      </button>
+                    </div>
                   </div>
+
+                  <!-- Vertical Equalizer Sliders -->
+                  <div class="vertical-equalizer-container">
+                    <div
+                      id="verticalSlidersContainer"
+                      class="vertical-sliders-container"
+                    >
+                      <!-- Vertical sliders will be dynamically added here -->
+                    </div>
+                  </div>
+
+                  
                 </div>
-
-
-                
               </div>
             </div>
-
-            <!-- Right Side - Frequency Spectrum -->
-            <div class="col-lg-8">
+          </div>
+          <!-- Frequency Spectrum and Spectrograms Section -->
+          <div class="row mb-4">
+            <div class="col-12">
               <div
                 class="visualization-panel"
-                data-aos="fade-left"
+                data-aos="fade-up"
                 data-aos-delay="200"
               >
                 <!-- Frequency Spectrum Section -->
@@ -632,157 +551,96 @@
                     <div id="frequencyChart" class="spectrum-plot"></div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
 
-                <!-- Frequency Bands Section -->
-                <div class="bands-section mb-4">
-                  <div
-                    class="section-header d-flex justify-content-between align-items-center mb-3"
-                  >
-                    <h4 class="mb-0">
-                      <i class="bi bi-sliders2-vertical me-2"></i>
-                      Frequency Bands
-                    </h4>
-                    <div class="band-management">
-                      <button id="addBand" class="btn btn-primary btn-sm">
-                        <i class="bi bi-plus-circle me-1"></i>Add Band
-                      </button>
-                    </div>
-                  </div>
-                  <div id="bandsContainer" class="bands-container">
-                    <!-- Dynamic bands will be added here -->
-                  </div>
-                </div>
-                <!-- Processing Controls -->
-                <div class="processing-controls-section">
-                  <div class="section-header mb-3">
-                    <h4 class="mb-0">
-                      <i class="bi bi-gear me-2"></i>
-                      Processing Controls
-                    </h4>
-                  </div>
-                  <div class="processing-controls">
-                    <button
-                      id="processAudio"
-                      class="btn btn-success w-100 mb-2"
-                      disabled
-                    >
-                      <i class="bi bi-gear me-1"></i>Process Audio
-                    </button>
-                    <button
-                      id="exportAudio"
-                      class="btn btn-outline-success w-100"
-                    >
-                      <i class="bi bi-download me-1"></i>Export Processed Audio
-                    </button>
+                <!-- Spectrograms Section -->
+                <div class="spectrograms-section">
+                  <div class="graph-box">
                     <div
-                      class="processing-progress mt-2"
-                      style="display: none"
-                      id="processingProgress"
+                      class="graph-header d-flex justify-content-between align-items-center mb-3"
                     >
-                      <div class="progress">
-                        <div
-                          class="progress-bar progress-bar-striped progress-bar-animated"
-                          role="progressbar"
-                          style="width: 0%"
-                        ></div>
-                      </div>
-                      <small class="text-muted mt-1">Processing audio...</small>
-                    </div>
-                  </div>
-                </div>
-          <!-- Spectrograms Section -->
-          <div class="row">
-            <div class="col-12">
-              <div class="spectrograms-section" data-aos="fade-up">
-                <div class="graph-box">
-                  <div
-                    class="graph-header d-flex justify-content-between align-items-center mb-3"
-                  >
-                    <h4>
-                      <i class="bi bi-soundwave me-2 text-warning"></i>
-                      Time-Frequency Analysis
-                    </h4>
-                    <div class="graph-controls">
-                      <div class="form-check form-switch">
-                        <input
-                          class="form-check-input"
-                          type="checkbox"
-                          id="showSpectrograms"
-                          checked
-                        />
-                        <label class="form-check-label" for="showSpectrograms"
-                          >Show Spectrograms</label
+                      <h4>
+                        <i class="bi bi-soundwave me-2 text-warning"></i>
+                        Time-Frequency Analysis
+                      </h4>
+                      <div class="graph-controls">
+                        <div class="form-check form-switch">
+                          <input
+                            class="form-check-input"
+                            type="checkbox"
+                            id="showSpectrograms"
+                            checked
+                          />
+                          <label class="form-check-label" for="showSpectrograms"
+                            >Show Spectrograms</label
+                          >
+                        </div>
+                        <button
+                          id="exportSpectrograms"
+                          class="btn btn-outline-primary btn-sm ms-2"
                         >
+                          <i class="bi bi-download me-1"></i>Export All
+                        </button>
                       </div>
-                      <button
-                        id="exportSpectrograms"
-                        class="btn btn-outline-primary btn-sm ms-2"
-                      >
-                        <i class="bi bi-download me-1"></i>Export All
-                      </button>
                     </div>
-                  </div>
 
-                  <div id="spectrogramsContainer">
-                    <div class="row g-4">
-                      <!-- Input Spectrogram -->
-                      <div class="col-lg-6">
-                        <div class="spectrogram-stack">
-                          <div class="graph-box h-100">
-                            <div class="graph-header">
-                              <h5>
-                                <i
-                                  class="bi bi-arrow-down-circle me-2 text-primary"
-                                ></i>
-                                Input Spectrogram
-                                <span class="badge bg-primary ms-2"
-                                  >Original</span
-                                >
-                              </h5>
-                            </div>
-                            <div
-                              id="inputSpectrogram"
-                              class="spectrogram-plot"
-                            ></div>
-                            <div class="spectrogram-info mt-2">
-                              <small class="text-muted">
-                                <i class="bi bi-info-circle me-1"></i>
-                                Shows frequency content over time for the original
-                                signal
-                              </small>
+                    <div id="spectrogramsContainer">
+                      <div class="row g-4">
+                        <!-- Input Spectrogram -->
+                        <div class="col-lg-6">
+                          <div class="spectrogram-stack">
+                            <div class="graph-box h-100">
+                              <div class="graph-header">
+                                <h5>
+                                  <i
+                                    class="bi bi-arrow-down-circle me-2 text-primary"
+                                  ></i>
+                                  Input Spectrogram
+                                  <span class="badge bg-primary ms-2"
+                                    >Original</span
+                                  >
+                                </h5>
+                              </div>
+                              <div
+                                id="inputSpectrogram"
+                                class="spectrogram-plot"
+                              ></div>
+                              <div class="spectrogram-info mt-2">
+                                <small class="text-muted">
+                                  <i class="bi bi-info-circle me-1"></i>
+                                  Shows frequency content over time for the
+                                  original signal
+                                </small>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
 
-                      <!-- Output Spectrogram -->
-                      <div class="col-lg-6">
-                        <div class="spectrogram-stack">
-                          <div class="graph-box h-100">
-                            <div class="graph-header">
-                              <h5>
-                                <i
-                                  class="bi bi-arrow-up-circle me-2 text-success"
-                                ></i>
-                                Output Spectrogram
-                                <span class="badge bg-success ms-2"
-                                  >Processed</span
-                                >
-                              </h5>
-                            </div>
-                            <div
-                              id="outputSpectrogram"
-                              class="spectrogram-plot"
-                            ></div>
-                            <div class="spectrogram-info mt-2">
-                              <small class="text-muted">
-                                <i class="bi bi-info-circle me-1"></i>
-                                Shows frequency content over time for the
-                                processed signal
-                              </small>
+                        <!-- Output Spectrogram -->
+                        <div class="col-lg-6">
+                          <div class="spectrogram-stack">
+                            <div class="graph-box h-100">
+                              <div class="graph-header">
+                                <h5>
+                                  <i
+                                    class="bi bi-arrow-up-circle me-2 text-success"
+                                  ></i>
+                                  Output Spectrogram
+                                  <span class="badge bg-success ms-2"
+                                    >Processed</span
+                                  >
+                                </h5>
+                              </div>
+                              <div
+                                id="outputSpectrogram"
+                                class="spectrogram-plot"
+                              ></div>
+                              <div class="spectrogram-info mt-2">
+                                <small class="text-muted">
+                                  <i class="bi bi-info-circle me-1"></i>
+                                  Shows frequency content over time for the
+                                  processed signal
+                                </small>
+                              </div>
                             </div>
                           </div>
                         </div>
