@@ -4,9 +4,9 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>AI Audio Separation - Signal Equalizer</title>
-  <meta name="description" content="AI-powered audio separation using state-of-the-art deep learning models">
-  <meta name="keywords" content="AI audio separation, music stems, voice isolation, Demucs, Asteroid">
+  <title>AI Mode - Signal Equalizer</title>
+  <meta name="description" content="AI-powered audio separation for music and voice">
+  <meta name="keywords" content="AI, audio separation, music stems, voice isolation">
 
   <!-- Favicons -->
   <link href="assets/img/logo.png" rel="icon">
@@ -28,8 +28,404 @@
   <link href="assets/css/main.css" rel="stylesheet">
   <link href="assets/css/customized_mode.css" rel="stylesheet">
 
-  <!-- Bootstrap Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <style>
+    /* AI Mode Specific Styles - Matching Project Theme */
+    .ai-mode-container {
+      padding: 100px 0 60px 0;
+      background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+      min-height: 100vh;
+    }
+
+    .ai-header {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+
+    .ai-header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--heading-color);
+      margin-bottom: 15px;
+    }
+
+    .ai-header p {
+      font-size: 1.1rem;
+      color: var(--default-color);
+      opacity: 0.8;
+    }
+
+    /* Tab Styling - Matching Project Theme */
+    .nav-pills .nav-link {
+      background: white;
+      color: var(--default-color);
+      border-radius: 10px;
+      padding: 15px 30px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+
+    .nav-pills .nav-link:hover {
+      background: var(--accent-color);
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    .nav-pills .nav-link.active {
+      background: var(--accent-color);
+      color: white;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Upload Card */
+    .upload-card {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+      margin-bottom: 30px;
+      border: 2px solid #f0f0f0;
+      transition: all 0.3s ease;
+    }
+
+    .upload-card:hover {
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+      border-color: var(--accent-color);
+    }
+
+    .upload-card h4 {
+      color: var(--heading-color);
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .upload-card h4 i {
+      color: var(--accent-color);
+    }
+
+    /* Stem/Voice Card */
+    .stem-card {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      border-left: 4px solid var(--accent-color);
+      transition: all 0.3s ease;
+    }
+
+    .stem-card:hover {
+      background: #fff;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+      transform: translateX(5px);
+    }
+
+    .stem-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .stem-header h5 {
+      font-weight: 600;
+      color: var(--heading-color);
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    .gain-value {
+      font-weight: 600;
+      color: var(--accent-color);
+      font-size: 1rem;
+    }
+
+    /* Gain Control Slider */
+    .gain-control {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-top: 10px;
+    }
+
+    .gain-control label {
+      margin: 0;
+      font-weight: 500;
+      color: var(--default-color);
+      min-width: 50px;
+    }
+
+    .form-range {
+      flex: 1;
+    }
+
+    .form-range::-webkit-slider-thumb {
+      background: var(--accent-color);
+    }
+
+    .form-range::-moz-range-thumb {
+      background: var(--accent-color);
+    }
+
+    /* Mixed Audio Card */
+    .mixed-audio-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 30px;
+      border-radius: 15px;
+      color: white;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+      margin-top: 30px;
+      animation: slideIn 0.5s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .mixed-audio-card h5 {
+      color: white;
+      font-weight: 600;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mixed-audio-card audio {
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+
+    /* Frequency Plot Styling - Updated Colors */
+    .frequency-plot-container {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+      border-radius: 12px;
+      border: 3px solid #5a67d8;
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .frequency-plot-container h6 {
+      color: white;
+      font-weight: 600;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .frequency-plot-container h6 i {
+      font-size: 1.2rem;
+      color: #ffd700;
+    }
+
+    #frequencyCanvas_mixedAudioContainer,
+    #frequencyCanvas_mixedVoiceContainer {
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      cursor: crosshair;
+      border-radius: 8px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .spectrum-stats {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 15px;
+      border-radius: 8px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .spectrum-stats .text-white-50 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .spectrum-stats .fw-bold {
+      font-size: 1.1rem;
+      margin-top: 5px;
+      color: white;
+    }
+
+    /* Status Messages */
+    .alert {
+      border-radius: 10px;
+      border: none;
+      padding: 15px 20px;
+    }
+
+    .alert-info {
+      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+      color: #1565c0;
+    }
+
+    .alert-success {
+      background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+      color: #2e7d32;
+    }
+
+    .alert-danger {
+      background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+      color: #c62828;
+    }
+
+    /* Buttons */
+    .btn-primary {
+      background: var(--accent-color);
+      border: none;
+      padding: 12px 30px;
+      font-weight: 600;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      background: var(--contrast-color);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-primary:focus,
+    .btn-primary:active,
+    .btn-primary:focus-visible,
+    .btn-primary.active {
+      background: var(--accent-color) !important;
+      color: white !important;
+      border: none !important;
+      box-shadow: 0 0 0 0.25rem rgba(214, 51, 132, 0.5) !important;
+    }
+
+    .btn-primary:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+      border: none;
+      padding: 12px 25px;
+      font-weight: 600;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+    }
+
+    .btn-success:focus,
+    .btn-success:active,
+    .btn-success:focus-visible,
+    .btn-success.active {
+      background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%) !important;
+      color: white !important;
+      border: none !important;
+      box-shadow: 0 0 0 0.25rem rgba(76, 175, 80, 0.5) !important;
+    }
+
+    .btn-success:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    .btn-light {
+      background: white;
+      color: var(--heading-color);
+      border: none;
+      padding: 12px 25px;
+      font-weight: 600;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-light:hover {
+      background: #faf8f8;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-light:focus,
+    .btn-light:active,
+    .btn-light:focus-visible,
+    .btn-light.active {
+      background: white !important;
+      color: var(--heading-color) !important;
+      border: none !important;
+      box-shadow: 0 0 0 0.25rem rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .btn-light:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    /* Badge */
+    .badge {
+      padding: 8px 12px;
+      font-weight: 600;
+      border-radius: 6px;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--default-color);
+      opacity: 0.6;
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      margin-bottom: 20px;
+      opacity: 0.4;
+    }
+
+    /* Loading Spinner */
+    .spinner-border-sm {
+      width: 1rem;
+      height: 1rem;
+      border-width: 0.15em;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .ai-header h1 {
+        font-size: 2rem;
+      }
+
+      .stem-card {
+        margin-bottom: 15px;
+      }
+
+      .gain-control {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .frequency-plot-container {
+        padding: 15px;
+      }
+
+      #frequencyCanvas_mixedAudioContainer,
+      #frequencyCanvas_mixedVoiceContainer {
+        height: 200px !important;
+      }
+
+      .nav-pills .nav-link {
+        padding: 12px 20px;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
 </head>
 
 <body class="equalizer-page">
@@ -54,113 +450,141 @@
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       </nav>
 
-      <a class="btn-getstarted" href="equalizer.html">Launch Equalizer</a>
+      <a class="btn-getstarted" href="customized_mode.html">Launch Equalizer</a>
 
     </div>
   </header>
 
   <main class="main">
-    <div class="container mt-5">
-      <div class="equalizer-container">
-        
+
+    <!-- AI Mode Container -->
+    <section class="ai-mode-container">
+      <div class="container">
+
         <!-- Header -->
-        <div class="equalizer-header text-center mb-4">
-          <h1><i class="bi bi-robot"></i> AI Audio Separation</h1>
-          <p>State-of-the-art Deep Learning Models for Music & Voice Separation</p>
+        <div class="ai-header" data-aos="fade-up">
+          <h1>🤖 AI-Powered Audio Separation</h1>
+          <p>Separate music into stems or isolate individual voices using deep learning</p>
         </div>
 
-        <!-- Upload Section -->
-        <div class="card mb-4">
-          <div class="card-body">
-            <h5 class="card-title"><i class="bi bi-cloud-arrow-up"></i> Upload Audio File</h5>
-            <input type="file" id="audioFile" accept="audio/*" class="form-control mb-3">
-            <div id="fileInfo" class="text-muted small">No file selected</div>
-          </div>
-        </div>
-
-        <!-- Mode Selection -->
-        <div class="card mb-4">
-          <div class="card-body">
-            <h5 class="card-title"><i class="bi bi-cpu"></i> Select Separation Mode</h5>
-            <select class="form-select mb-3" id="aiModeSelect" disabled>
-              <option value="">Please upload audio first</option>
-            </select>
-
-            <!-- Music Settings -->
-            <div id="musicSettings" class="hidden">
-              <label class="form-label">Demucs Model:</label>
-              <select class="form-select mb-2" id="musicModel">
-                <option value="htdemucs">HT-Demucs (4 stems)</option>
-                <option value="htdemucs_6s" selected>HT-Demucs 6s (6 stems)</option>
-              </select>
-            </div>
-
-            <!-- Voice Settings -->
-            <div id="voiceSettings" class="hidden">
-              <label class="form-label">Number of Speakers:</label>
-              <select class="form-select mb-3" id="numSpeakers">
-                <option value="2" selected>2 Speakers</option>
-                <option value="3">3 Speakers</option>
-                <option value="4">4 Speakers</option>
-              </select>
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="applyEnhancement" checked>
-                <label class="form-check-label" for="applyEnhancement">Apply Wiener Filter</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="noiseReduction" checked>
-                <label class="form-check-label" for="noiseReduction">Noise Reduction</label>
-              </div>
-            </div>
-
-            <button class="btn btn-primary mt-3" id="separateButton" disabled>
-              <i class="bi bi-cpu-fill"></i> Start Separation
+        <!-- Tabs -->
+        <ul class="nav nav-pills nav-fill mb-4" role="tablist" data-aos="fade-up" data-aos-delay="100">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="music-tab" data-bs-toggle="pill" data-bs-target="#music" type="button" role="tab">
+              <i class="bi bi-music-note-list"></i> Music Separation
             </button>
-            
-            <!-- Progress Bar -->
-            <div class="progress mt-3 hidden" id="progressContainer">
-              <div class="progress-bar progress-bar-striped progress-bar-animated" 
-                   role="progressbar" id="progressBar" style="width: 0%">0%</div>
-            </div>
-          </div>
-        </div>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="voice-tab" data-bs-toggle="pill" data-bs-target="#voice" type="button" role="tab">
+              <i class="bi bi-mic"></i> Voice Separation
+            </button>
+          </li>
+        </ul>
 
-        <!-- Original File -->
-        <div class="card mb-4 hidden" id="originalFileSection">
-          <div class="card-body">
-            <h5 class="card-title"><i class="bi bi-file-music"></i> Original Audio</h5>
-            <div class="d-flex align-items-center">
-              <i class="bi bi-music-note-beamed fs-3 me-3 text-primary"></i>
-              <div class="flex-grow-1">
-                <audio controls class="w-100" id="originalAudio"></audio>
+        <!-- Tab Content -->
+        <div class="tab-content">
+
+          <!-- MUSIC SEPARATION TAB -->
+          <div class="tab-pane fade show active" id="music" role="tabpanel">
+            <div class="row">
+
+              <!-- Upload Section -->
+              <div class="col-lg-4" data-aos="fade-right">
+                <div class="upload-card">
+                  <h4><i class="bi bi-cloud-upload"></i> Upload Music</h4>
+                  <p class="text-muted mb-3">Upload any song to separate into individual instruments</p>
+                  <input type="file" class="form-control mb-3" id="musicUpload" accept="audio/*">
+                  <button class="btn btn-primary w-100" id="musicSeparateBtn">
+                    <i class="bi bi-music-note-beamed"></i> Separate Into Stems
+                  </button>
+                  <div id="musicStatus" class="mt-3"></div>
+                </div>
+
+                <!-- Info Card -->
+                <div class="upload-card">
+                  <h4><i class="bi bi-info-circle"></i> About Music Mode</h4>
+                  <p class="text-muted mb-2"><strong>Separates into 6 stems:</strong></p>
+                  <ul class="text-muted small">
+                    <li>🥁 Drums - All percussion</li>
+                    <li>🎸 Bass - Low frequencies</li>
+                    <li>🎤 Vocals - Lead & backing</li>
+                    <li>🎸 Guitar - All guitars</li>
+                    <li>🎹 Piano - Keyboards</li>
+                    <li>🎵 Other - Remaining sounds</li>
+                  </ul>
+                  <p class="text-muted small mb-0"><strong>Model:</strong> Demucs htdemucs_6s</p>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
 
-        <!-- Results Section -->
-        <div id="resultsSection" class="hidden">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title"><i class="bi bi-check-circle"></i> Separated Audio Files</h5>
-              <div id="audioFilesContainer"></div>
-              <button class="btn btn-success mt-3" id="downloadAllBtn">
-                <i class="bi bi-download"></i> Download All
-              </button>
-              <button class="btn btn-secondary mt-3" id="resetBtn">
-                <i class="bi bi-arrow-clockwise"></i> Reset
-              </button>
+              <!-- Results Section -->
+              <div class="col-lg-8" data-aos="fade-left">
+                <div id="musicResults">
+                  <div class="empty-state">
+                    <i class="bi bi-music-note-list"></i>
+                    <p class="mt-3">Upload a music file to see separated stems here</p>
+                    <small class="text-muted">Supports MP3, WAV, FLAC, M4A formats</small>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
+
+          <!-- VOICE SEPARATION TAB -->
+          <div class="tab-pane fade" id="voice" role="tabpanel">
+            <div class="row">
+
+              <!-- Upload Section -->
+              <div class="col-lg-4" data-aos="fade-right">
+                <div class="upload-card">
+                  <h4><i class="bi bi-cloud-upload"></i> Upload Audio</h4>
+                  <p class="text-muted mb-3">Upload multi-speaker audio to isolate individual voices</p>
+                  <input type="file" class="form-control mb-3" id="voiceUpload" accept="audio/*">
+                  <button class="btn btn-primary w-100" id="voiceSeparateBtn">
+                    <i class="bi bi-people"></i> Separate Speakers
+                  </button>
+                  <div id="voiceStatus" class="mt-3"></div>
+                </div>
+
+                <!-- Info Card -->
+                <div class="upload-card">
+                  <h4><i class="bi bi-info-circle"></i> About Voice Mode</h4>
+                  <p class="text-muted mb-2"><strong>Perfect for:</strong></p>
+                  <ul class="text-muted small">
+                    <li>🎙️ Podcasts (2-4 speakers)</li>
+                    <li>📻 Radio shows</li>
+                    <li>💬 Interviews</li>
+                    <li>👥 Meetings & conferences</li>
+                    <li>📞 Phone conversations</li>
+                  </ul>
+                  <p class="text-muted small mb-0"><strong>Model:</strong> Asteroid DPRNN</p>
+                </div>
+              </div>
+
+              <!-- Results Section -->
+              <div class="col-lg-8" data-aos="fade-left">
+                <div id="voiceResults">
+                  <div class="empty-state">
+                    <i class="bi bi-mic"></i>
+                    <p class="mt-3">Upload audio to see separated voices here</p>
+                    <small class="text-muted">Works best with 2-4 distinct speakers</small>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
         </div>
 
       </div>
-    </div>
+    </section>
+
   </main>
 
   <footer id="footer" class="footer dark-background">
     <div class="container copyright text-center mt-4">
-      <p>© <span>2024</span> <strong class="px-1 sitename">Signal Equalizer</strong> <span>All Rights Reserved</span></p>
+      <p>© <span>Copyright</span> <strong class="px-1 sitename">Signal Equalizer</strong> <span>All Rights Reserved</span></p>
     </div>
   </footer>
 
@@ -181,20 +605,14 @@
   <!-- AI Mode JS -->
   <script src="assets/js/ai_mode.js"></script>
 
-  <style>
-    .hidden { display: none; }
-    .card { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .audio-file-item {
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 10px;
-      background: #f8f9fa;
-    }
-    .audio-file-item:hover {
-      background: #e9ecef;
-    }
-  </style>
+  <script>
+    // Initialize AOS
+    AOS.init({
+      duration: 800,
+      easing: 'ease-in-out',
+      once: true
+    });
+  </script>
 
 </body>
 

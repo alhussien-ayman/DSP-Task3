@@ -2,11 +2,11 @@ import torch
 import torchaudio
 from demucs.pretrained import get_model
 from demucs.apply import apply_model
-import time
 import os
 import sys
 import traceback
 import importlib.util
+import tempfile
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -35,50 +35,57 @@ class AIModelManager:
             try:
                 print("Loading Asteroid Multi-Decoder-DPRNN model from local repo...")
                 
-                asteroid_path = "Backend/asteroid_model/asteroid/egs/wsj0-mix-var/Multi-Decoder-DPRNN"
+                # Get absolute path relative to this file
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                asteroid_path = os.path.join(
+                    current_dir, 
+                    "..", 
+                    "asteroid_model", 
+                    "asteroid", 
+                    "egs", 
+                    "wsj0-mix-var", 
+                    "Multi-Decoder-DPRNN"
+                )
+                asteroid_path = os.path.normpath(asteroid_path)
                 
                 print(f"   Looking for model at: {asteroid_path}")
                 
-                # Check if path exists
                 if not os.path.exists(asteroid_path):
                     raise FileNotFoundError(f"Path not found: {asteroid_path}")
                 
-                # Add to Python path
                 if asteroid_path not in sys.path:
                     sys.path.insert(0, asteroid_path)
                     print(f"   Added to sys.path")
-                # Import the model from the cloned repo (load model.py dynamically)
+                    
                 model_file = os.path.join(asteroid_path, "model.py")
                 if not os.path.exists(model_file):
                     raise FileNotFoundError(f"Model file not found: {model_file}")
+                    
                 spec = importlib.util.spec_from_file_location("asteroid_model_module", model_file)
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
+                
                 MultiDecoderDPRNN = getattr(module, "MultiDecoderDPRNN", None)
                 if MultiDecoderDPRNN is None:
                     raise ImportError("MultiDecoderDPRNN not found in model.py")
-                print("   ✅ Imported MultiDecoderDPRNN")
+                    
                 print("   ✅ Imported MultiDecoderDPRNN")
                 
-                # Monkey-patch torch.load to fix PyTorch 2.6 weights_only issue
+                # Monkey-patch torch.load
                 original_load = torch.load
                 
                 def patched_load(*args, **kwargs):
-                    # Force weights_only=False for Asteroid checkpoint (trusted source)
                     kwargs['weights_only'] = False
                     return original_load(*args, **kwargs)
                 
-                # Temporarily replace torch.load
                 torch.load = patched_load
                 
                 try:
-                    # Load pre-trained model
                     print("   Downloading pretrained weights...")
                     self.asteroid_model = MultiDecoderDPRNN.from_pretrained(
                         "JunzheJosephZhu/MultiDecoderDPRNN"
                     ).eval()
                 finally:
-                    # Restore original torch.load
                     torch.load = original_load
                 
                 if torch.cuda.is_available():
@@ -92,70 +99,105 @@ class AIModelManager:
         return self.asteroid_model
     
     def separate_with_htdemucs(self, audio_path, model_name='htdemucs_6s'):
-        """Separate audio with Demucs"""
+        """
+        Separate audio with Demucs and return TENSORS
+        
+        Args:
+            audio_path: Path to input audio file or file-like object
+            model_name: Demucs model name
+            
+        Returns:
+            tuple: (drums_tensor, bass_tensor, other_tensor, vocals_tensor, guitar_tensor, piano_tensor, message)
+        """
         if audio_path is None:
-            return None, None, None, None, "Please upload an audio file."
+            return None, None, None, None, None, None, "Please upload an audio file."
 
         try:
+            # Handle file-like objects
+            if hasattr(audio_path, 'read'):
+                print("Saving uploaded file to temp location...")
+                temp_input = tempfile.NamedTemporaryFile(suffix='.wav', delete=False)
+                audio_path.save(temp_input.name)
+                audio_path = temp_input.name
+                print(f"   Saved to: {audio_path}")
+            
             print(f"Loading audio from: {audio_path}")
             wav, sr = torchaudio.load(audio_path)
+            print(f"   Input shape: {wav.shape}, Sample rate: {sr}Hz")
 
+            # Convert mono to stereo
             if wav.shape[0] == 1:
+                print("   Converting mono to stereo...")
                 wav = wav.repeat(2, 1)
 
+            # Load model
             model = self.load_demucs_model(model_name)
+            
+            # Resample if needed
+            if sr != model.samplerate:
+                print(f"   Resampling from {sr}Hz to {model.samplerate}Hz...")
+                resampler = torchaudio.transforms.Resample(sr, model.samplerate)
+                wav = resampler(wav)
+                sr = model.samplerate
 
             print(f"Applying {model_name}...")
+            wav = wav.to(self.device)
+            
             with torch.no_grad():
+                # apply_model expects shape: (batch, channels, samples)
                 sources = apply_model(model, wav[None], device=self.device, progress=True)[0]
-            print("✅ Separation complete.")
+            
+            print(f"✅ Separation complete.")
+            print(f"   Output shape: {sources.shape}")
+            print(f"   Sources: {model.sources}")
 
-            #timestamp = int(time.time() * 1000)
-            output_dir = f"demucs_{model_name}"
-            os.makedirs(output_dir, exist_ok=True)
-
-            output_paths = []
-            for i, name in enumerate(model.sources):
-                out_path = os.path.join(output_dir, f"{name}.wav")
-                torchaudio.save(out_path, sources[i].cpu(), sr)
-                output_paths.append(out_path)
-                print(f"✅ Saved {name}")
-
-            return (*output_paths, f"✅ Demucs separation successful!")
+            # Return tensors directly (shape: [channels, samples] for each stem)
+            output_tensors = [sources[i].cpu() for i in range(sources.shape[0])]
+            
+            # Return 6 tensors + success message
+            return (*output_tensors, f"✅ Demucs separation successful! Generated {len(output_tensors)} stems.")
 
         except Exception as e:
             print(f"❌ Error: {e}")
             traceback.print_exc()
-            num_stems = len(self.loaded_models.get(model_name, get_model(model_name)).sources)
-            return (*([None] * num_stems), f"❌ Error: {str(e)}")
+            return None, None, None, None, None, None, f"❌ Error: {str(e)}"
     
     def separate_voices_with_asteroid(self, audio_path):
         """
-        Separate voices using Asteroid Multi-Decoder-DPRNN
+        Separate voices using Asteroid Multi-Decoder-DPRNN and return TENSORS
         
         Args:
-            audio_path: Path to audio file            
+            audio_path: Path to audio file or file-like object
+            
         Returns:
-            tuple: (*voice_paths, message)
+            tuple: (voice1_tensor, voice2_tensor, voice3_tensor, voice4_tensor, message)
         """
         if audio_path is None:
-            return None, None, "Please upload an audio file."
+            return None, None, None, None, "Please upload an audio file."
 
         try:
+            # Handle file-like objects
+            if hasattr(audio_path, 'read'):
+                print("Saving uploaded file to temp location...")
+                temp_input = tempfile.NamedTemporaryFile(suffix='.wav', delete=False)
+                audio_path.save(temp_input.name)
+                audio_path = temp_input.name
+                print(f"   Saved to: {audio_path}")
+            
             print(f"Asteroid: Loading audio from: {audio_path}")
             
             # Load audio
             mixture, sr = torchaudio.load(audio_path)
-            print(f"Input: shape={mixture.shape}, sample_rate={sr}Hz")
+            print(f"   Input: shape={mixture.shape}, sample_rate={sr}Hz")
             
             # Convert to mono if stereo
             if mixture.shape[0] == 2:
-                print("Converting stereo to mono...")
+                print("   Converting stereo to mono...")
                 mixture = mixture.mean(dim=0, keepdim=True)
             
             # Resample to 8kHz (required by model)
             if sr != 8000:
-                print(f"Resampling from {sr}Hz to 8000Hz...")
+                print(f"   Resampling from {sr}Hz to 8000Hz...")
                 resampler = torchaudio.transforms.Resample(sr, 8000)
                 mixture = resampler(mixture)
                 sr = 8000
@@ -169,7 +211,6 @@ class AIModelManager:
             
             print("Asteroid: Separating voices...")
             with torch.no_grad():
-                # Use the separate method like in the notebook
                 sources_est = model.separate(mixture).cpu()
             
             print(f"✅ Asteroid: Separation complete.")
@@ -178,25 +219,18 @@ class AIModelManager:
             num_sources = sources_est.shape[0]
             print(f"   Found {num_sources} sources")
             
-            # Save separated voices
-            #timestamp = int(time.time() * 1000)
-            output_dir = f"asteroid_voices"
-            os.makedirs(output_dir, exist_ok=True)
+            # Return up to 4 voice tensors
+            output_tensors = [None, None, None, None]
+            for i in range(min(num_sources, 4)):
+                output_tensors[i] = sources_est[i].cpu()
             
-            output_paths = []
-            for i in range(num_sources):
-                out_path = os.path.join(output_dir, f"voice_{i+1}.wav")
-                voice_audio = sources_est[i].unsqueeze(0)  # Shape: (1, samples)
-                torchaudio.save(out_path, voice_audio, 8000)
-                output_paths.append(out_path)
-                print(f"✅ Saved voice {i+1} to {out_path}")
-            
-            return (*output_paths, "✅ Asteroid voice separation successful!")
+            # Return exactly 5 values: 4 tensors + message
+            return (*output_tensors, f"✅ Asteroid voice separation successful! Generated {num_sources} voices.")
 
         except Exception as e:
             print(f"❌ Asteroid Error: {e}")
             traceback.print_exc()
-            return None, None, f"❌ Asteroid Error: {str(e)}"
+            return None, None, None, None, f"❌ Asteroid Error: {str(e)}"
     
     def unload_models(self):
         """Free memory"""
@@ -215,24 +249,26 @@ ai_manager = AIModelManager()
 
 
 if __name__ == "__main__":
-    test_audio_music = "/home/saif/Downloads/Data_DSP3/IRMAS-Sample/Testing/02. School Boy-9.wav"
-    test_audio_voice = "/home/saif/Downloads/Data_DSP3/4_mixture.wav"
+    test_audio_music = "dataset/02. School Boy-9.wav"
+    test_audio_voice = "dataset/4_mixture.wav"
     
     print("=" * 60)
     print("Testing Demucs 6-stem separation (music)")
     print("=" * 60)
-    # result = ai_manager.separate_with_htdemucs(test_audio_music, 'htdemucs_6s')
-    # if result[0]:
-    #     print("\n📁 Music Stems:")
-    #     labels = ["🥁 Drums", "🎸 Bass", "🎹 Other", "🎤 Vocals", "🎸 Guitar", "🎹 Piano"]
-    #     for label, path in zip(labels, result[:-1]):
-    #         print(f"  {label}: {path}")
+    result = ai_manager.separate_with_htdemucs(test_audio_music, 'htdemucs_6s')
+    if result[0] is not None:
+        print("\n📁 Music Stems (tensors):")
+        labels = ["🥁 Drums", "🎸 Bass", "🎹 Other", "🎤 Vocals", "🎸 Guitar", "🎹 Piano"]
+        for label, tensor in zip(labels, result[:-1]):
+            if tensor is not None:
+                print(f"  {label}: shape={tensor.shape}")
     
     print("\n" + "=" * 60)
     print("Testing Asteroid voice separation")
     print("=" * 60)
     voices_result = ai_manager.separate_voices_with_asteroid(test_audio_voice)
-    if voices_result[0]:
-        print("\n📁 Separated Voices:")
-        for i, path in enumerate(voices_result[:-1]):
-            print(f"  🎤 Voice {i+1}: {path}")
+    if voices_result[0] is not None:
+        print("\n📁 Separated Voices (tensors):")
+        for i, tensor in enumerate(voices_result[:-1]):
+            if tensor is not None:
+                print(f"  🎤 Voice {i+1}: shape={tensor.shape}")

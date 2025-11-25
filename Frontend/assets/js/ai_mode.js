@@ -1,438 +1,652 @@
 /**
- * AI Audio Separation Mode - Simplified
- * Simple file-based interface for music and voice separation
+ * AI Mode - Music and Voice Separation with Gain Control and Frequency Plotting
  */
 
-// ============================================================================
-// CONFIGURATION
-// ============================================================================
+const API_BASE = 'http://localhost:5000/api/ai';
 
-const API_BASE_URL = 'http://localhost:5000/api/ai';
-console.log('🚀 AI Mode JS Loaded');
-console.log('📡 API Base URL:', API_BASE_URL);
-
-let uploadedFile = null;
-let currentMode = null;
-let separatedFiles = {};
-
-// ============================================================================
-// INITIALIZATION
-// ============================================================================
-
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎵 AI Mode initialized');
-    initializeEventListeners();
-    testAPIConnection();
-});
-
-async function testAPIConnection() {
-    try {
-        const response = await fetch('http://localhost:5000/api/test');
-        const data = await response.json();
-        console.log('✅ API Connection successful:', data);
-    } catch (error) {
-        console.error('❌ API Connection failed:', error);
-        showError('Backend server is not running. Please start the Flask server.');
-    }
-}
-
-function initializeEventListeners() {
-    const audioFileInput = document.getElementById('audioFile');
-    const aiModeSelect = document.getElementById('aiModeSelect');
-    const separateButton = document.getElementById('separateButton');
-    const downloadAllBtn = document.getElementById('downloadAllBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    
-    audioFileInput.addEventListener('change', handleFileSelect);
-    aiModeSelect.addEventListener('change', handleModeChange);
-    separateButton.addEventListener('click', startSeparation);
-    
-    if (downloadAllBtn) downloadAllBtn.addEventListener('click', downloadAll);
-    if (resetBtn) resetBtn.addEventListener('click', resetAll);
-}
-
-// ============================================================================
-// FILE HANDLING
-// ============================================================================
-
-function handleFileSelect(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    console.log('📁 File selected:', file.name);
-    
-    // Validate file type
-    const validTypes = ['audio/mpeg', 'audio/wav', 'audio/flac', 'audio/x-m4a', 'audio/mp3'];
-    if (!validTypes.includes(file.type) && !file.name.match(/\.(mp3|wav|flac|m4a)$/i)) {
-        showError('Invalid file type. Please upload MP3, WAV, FLAC, or M4A files.');
-        return;
+class AISeparationController {
+    constructor() {
+        this.currentStems = {};
+        this.currentVoices = {};
+        this.sampleRate = 44100;
+        this.init();
     }
     
-    // Validate file size (100MB max)
-    if (file.size > 100 * 1024 * 1024) {
-        showError('File too large. Maximum size is 100MB.');
-        return;
+    init() {
+        console.log('🎵 AI Separation Controller initialized');
+        this.setupEventListeners();
     }
     
-    uploadedFile = file;
-    
-    // Update UI
-    document.getElementById('fileInfo').textContent = 
-        `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
-    
-    // Enable mode selection
-    const aiModeSelect = document.getElementById('aiModeSelect');
-    aiModeSelect.disabled = false;
-    aiModeSelect.innerHTML = `
-        <option value="">-- Select Separation Type --</option>
-        <option value="music">Music Separation (Drums, Bass, Vocals, Other)</option>
-        <option value="voice">Voice Separation (Multiple Speakers)</option>
-    `;
-    
-    // Show original audio player
-    const originalAudio = document.getElementById('originalAudio');
-    originalAudio.src = URL.createObjectURL(file);
-    document.getElementById('originalFileSection').classList.remove('hidden');
-    
-    console.log('✅ File loaded successfully');
-}
-
-// ============================================================================
-// MODE HANDLING
-// ============================================================================
-
-function handleModeChange(e) {
-    const mode = e.target.value;
-    console.log('🔄 Mode changed to:', mode);
-    
-    currentMode = mode;
-    
-    const musicSettings = document.getElementById('musicSettings');
-    const voiceSettings = document.getElementById('voiceSettings');
-    const separateButton = document.getElementById('separateButton');
-    
-    musicSettings.classList.add('hidden');
-    voiceSettings.classList.add('hidden');
-    
-    if (mode === 'music') {
-        musicSettings.classList.remove('hidden');
-        separateButton.disabled = false;
-    } else if (mode === 'voice') {
-        voiceSettings.classList.remove('hidden');
-        separateButton.disabled = false;
-    } else {
-        separateButton.disabled = true;
-    }
-}
-
-// ============================================================================
-// SEPARATION
-// ============================================================================
-
-async function startSeparation() {
-    if (!uploadedFile || !currentMode) {
-        showError('Please upload a file and select a mode first.');
-        return;
+    setupEventListeners() {
+        const musicSeparateBtn = document.getElementById('musicSeparateBtn');
+        if (musicSeparateBtn) {
+            musicSeparateBtn.addEventListener('click', () => this.separateMusic());
+        }
+        
+        const voiceSeparateBtn = document.getElementById('voiceSeparateBtn');
+        if (voiceSeparateBtn) {
+            voiceSeparateBtn.addEventListener('click', () => this.separateVoices());
+        }
     }
     
-    console.log('🚀 Starting separation...');
-    
-    const separateButton = document.getElementById('separateButton');
-    separateButton.disabled = true;
-    separateButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing...';
-    
-    const progressContainer = document.getElementById('progressContainer');
-    progressContainer.classList.remove('hidden');
-    
-    try {
-        if (currentMode === 'music') {
-            await separateMusic();
-        } else if (currentMode === 'voice') {
-            await separateVoice();
-        }
-    } catch (error) {
-        console.error('❌ Separation error:', error);
-        showError('Separation failed: ' + error.message);
+    async separateMusic() {
+        const fileInput = document.getElementById('musicUpload');
+        const statusDiv = document.getElementById('musicStatus');
+        const resultsDiv = document.getElementById('musicResults');
         
-        separateButton.disabled = false;
-        separateButton.innerHTML = '<i class="bi bi-cpu-fill"></i> Start Separation';
-        progressContainer.classList.add('hidden');
+        if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+            this.showError(statusDiv, 'Please select an audio file first');
+            return;
+        }
+        
+        const file = fileInput.files[0];
+        
+        try {
+            this.showLoading(statusDiv, 'Separating music into stems... This may take a few minutes.');
+            resultsDiv.innerHTML = '<div class="empty-state"><i class="bi bi-hourglass-split"></i><p class="mt-3">Processing...</p></div>';
+            
+            const formData = new FormData();
+            formData.append('audio', file);
+            formData.append('model_name', 'htdemucs_6s');
+            
+            const response = await fetch(`${API_BASE}/music_separation`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.error || 'Separation failed');
+            }
+            
+            this.currentStems = data.stems;
+            this.sampleRate = data.sample_rate;
+            
+            this.showSuccess(statusDiv, data.message);
+            this.displayMusicResults(data.stems, data.sample_rate);
+            
+        } catch (error) {
+            console.error('Music separation error:', error);
+            this.showError(statusDiv, error.message);
+            resultsDiv.innerHTML = '<div class="empty-state"><i class="bi bi-x-circle text-danger"></i><p class="mt-3 text-danger">Separation failed</p></div>';
+        }
     }
-}
-
-async function separateMusic() {
-    console.log('🎵 Starting music separation...');
     
-    const formData = new FormData();
-    formData.append('audio', uploadedFile);
-    formData.append('model_name', document.getElementById('musicModel').value);
-    
-    updateProgress(10, 'Uploading...');
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/music_separation`, {
-            method: 'POST',
-            body: formData
-        });
+    async separateVoices() {
+        const fileInput = document.getElementById('voiceUpload');
+        const statusDiv = document.getElementById('voiceStatus');
+        const resultsDiv = document.getElementById('voiceResults');
         
-        updateProgress(50, 'AI processing...');
-        
-        // Check if response is JSON
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            const text = await response.text();
-            console.error('❌ Non-JSON response:', text);
-            throw new Error('Server returned non-JSON response. Check if AI mode endpoint exists.');
+        if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+            this.showError(statusDiv, 'Please select an audio file first');
+            return;
         }
         
-        const data = await response.json();
-        console.log('📦 Response data:', data);
+        const file = fileInput.files[0];
         
-        if (!response.ok) {
-            throw new Error(data.error || 'Music separation failed');
+        try {
+            this.showLoading(statusDiv, 'Separating voices... This may take a few minutes.');
+            resultsDiv.innerHTML = '<div class="empty-state"><i class="bi bi-hourglass-split"></i><p class="mt-3">Processing...</p></div>';
+            
+            const formData = new FormData();
+            formData.append('audio', file);
+            
+            const response = await fetch(`${API_BASE}/voice_separation`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.error || 'Separation failed');
+            }
+            
+            this.currentVoices = data.voices;
+            this.sampleRate = data.sample_rate;
+            
+            this.showSuccess(statusDiv, data.message);
+            this.displayVoiceResults(data.voices, data.sample_rate);
+            
+        } catch (error) {
+            console.error('Voice separation error:', error);
+            this.showError(statusDiv, error.message);
+            resultsDiv.innerHTML = '<div class="empty-state"><i class="bi bi-x-circle text-danger"></i><p class="mt-3 text-danger">Separation failed</p></div>';
         }
-        
-        if (!data.success) {
-            throw new Error(data.error || 'Separation failed');
-        }
-        
-        updateProgress(90, 'Loading results...');
-        displayMusicResults(data);
-        updateProgress(100, 'Complete!');
-        
-        setTimeout(() => {
-            document.getElementById('progressContainer').classList.add('hidden');
-        }, 2000);
-    } catch (error) {
-        console.error('❌ Music separation error:', error);
-        throw error;
     }
-}
-
-async function separateVoice() {
-    console.log('🎤 Starting voice separation...');
     
-    const formData = new FormData();
-    formData.append('audio', uploadedFile);
-    formData.append('num_speakers', document.getElementById('numSpeakers').value);
-    formData.append('apply_enhancement', document.getElementById('applyEnhancement').checked);
-    formData.append('noise_reduction', document.getElementById('noiseReduction').checked);
-    
-    updateProgress(10, 'Uploading...');
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/voice_separation`, {
-            method: 'POST',
-            body: formData
-        });
+    displayMusicResults(stems, sampleRate) {
+        const resultsDiv = document.getElementById('musicResults');
         
-        updateProgress(50, 'AI processing...');
+        const stemNames = ['drums', 'bass', 'vocals', 'guitar', 'piano', 'other'];
+        const stemLabels = {
+            'drums': '🥁 Drums',
+            'bass': '🎸 Bass',
+            'vocals': '🎤 Vocals',
+            'guitar': '🎸 Guitar',
+            'piano': '🎹 Piano',
+            'other': '🎵 Other'
+        };
         
-        // Check if response is JSON
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            const text = await response.text();
-            console.error('❌ Non-JSON response:', text);
-            throw new Error('Server returned non-JSON response. Check if AI mode endpoint exists.');
-        }
+        let html = '<div class="stems-container">';
+        html += '<h4 class="mb-4" style="color: var(--heading-color); font-weight: 600;">🎼 Separated Stems</h4>';
+        html += '<p class="text-muted mb-4">Control individual stem volumes with the sliders below</p>';
+        html += '<div class="row">';
         
-        const data = await response.json();
-        console.log('📦 Response data:', data);
-        
-        if (!response.ok) {
-            throw new Error(data.error || 'Voice separation failed');
-        }
-        
-        if (!data.success) {
-            throw new Error(data.error || 'Separation failed');
-        }
-        
-        updateProgress(90, 'Loading results...');
-        displayVoiceResults(data);
-        updateProgress(100, 'Complete!');
-        
-        setTimeout(() => {
-            document.getElementById('progressContainer').classList.add('hidden');
-        }, 2000);
-    } catch (error) {
-        console.error('❌ Voice separation error:', error);
-        throw error;
-    }
-}
-
-function updateProgress(percent, message) {
-    const progressBar = document.getElementById('progressBar');
-    progressBar.style.width = percent + '%';
-    progressBar.textContent = percent + '%';
-}
-
-// ============================================================================
-// DISPLAY RESULTS
-// ============================================================================
-
-function displayMusicResults(data) {
-    console.log('🎵 Displaying music results...');
-    console.log('Data received:', data);
-    
-    separatedFiles = {};
-    const container = document.getElementById('audioFilesContainer');
-    container.innerHTML = '';
-    
-    const stems = [
-        { key: 'drums', title: 'Drums', icon: 'bi-music-note-beamed' },
-        { key: 'bass', title: 'Bass', icon: 'bi-music-note' },
-        { key: 'vocals', title: 'Vocals', icon: 'bi-mic-fill' },
-        { key: 'other', title: 'Other', icon: 'bi-soundwave' },
-        { key: 'guitar', title: 'Guitar', icon: 'bi-music-note-list' },
-        { key: 'piano', title: 'Piano', icon: 'bi-music-note' }
-    ];
-    
-    stems.forEach(stem => {
-        if (data[stem.key]) {
-            // Don't encode the filename - send it as-is
-            const fileUrl = `${API_BASE_URL}/download/${data[stem.key]}`;
-            console.log(`Creating player for ${stem.title}: ${fileUrl}`);
-            separatedFiles[stem.key] = { url: fileUrl, filename: `${stem.key}.wav` };
-            createAudioFileItem(container, stem.title, stem.icon, fileUrl, stem.key);
-        }
-    });
-    
-    document.getElementById('resultsSection').classList.remove('hidden');
-    console.log('✅ Music results displayed');
-}
-
-function displayVoiceResults(data) {
-    console.log('🎤 Displaying voice results...');
-    console.log('Data received:', data);
-    
-    separatedFiles = {};
-    const container = document.getElementById('audioFilesContainer');
-    container.innerHTML = '';
-    
-    if (data.voices) {
-        Object.entries(data.voices).forEach(([voiceKey, filePath]) => {
-            if (filePath) {
-                // Don't encode the filename - send it as-is
-                const fileUrl = `${API_BASE_URL}/download/${filePath}`;
-                const title = voiceKey.replace(/_/g, ' ').toUpperCase();
-                console.log(`Creating player for ${title}: ${fileUrl}`);
-                separatedFiles[voiceKey] = { url: fileUrl, filename: `${voiceKey}.wav` };
-                createAudioFileItem(container, title, 'bi-person-fill', fileUrl, voiceKey);
+        stemNames.forEach(stemName => {
+            if (stems[stemName]) {
+                html += `
+                    <div class="col-md-6 mb-3">
+                        <div class="stem-card">
+                            <div class="stem-header">
+                                <h5>${stemLabels[stemName]}</h5>
+                                <span class="gain-value" id="${stemName}-gain-value">100%</span>
+                            </div>
+                            <audio controls class="w-100 mb-2" src="${stems[stemName]}"></audio>
+                            <div class="gain-control">
+                                <label><i class="bi bi-volume-up"></i></label>
+                                <input type="range" 
+                                       class="form-range stem-gain-slider" 
+                                       min="0" 
+                                       max="100" 
+                                       value="100" 
+                                       data-stem="${stemName}"
+                                       id="${stemName}-gain">
+                            </div>
+                        </div>
+                    </div>
+                `;
             }
         });
+        
+        html += '</div>';
+        
+        html += `
+            <div class="mt-4 text-center">
+                <button class="btn btn-primary btn-lg" id="mixStemsBtn">
+                    <i class="bi bi-soundwave"></i> Mix All Stems with Current Gains
+                </button>
+            </div>
+            <div id="mixedAudioContainer" class="mt-4"></div>
+        `;
+        
+        html += '</div>';
+        
+        resultsDiv.innerHTML = html;
+        
+        document.querySelectorAll('.stem-gain-slider').forEach(slider => {
+            slider.addEventListener('input', (e) => {
+                const stemName = e.target.dataset.stem;
+                const value = e.target.value;
+                document.getElementById(`${stemName}-gain-value`).textContent = `${value}%`;
+            });
+        });
+        
+        const mixBtn = document.getElementById('mixStemsBtn');
+        if (mixBtn) {
+            mixBtn.addEventListener('click', () => this.mixStems());
+        }
     }
     
-    document.getElementById('resultsSection').classList.remove('hidden');
-    console.log('✅ Voice results displayed');
-}
-
-function createAudioFileItem(container, title, icon, fileUrl, key) {
-    const item = document.createElement('div');
-    item.className = 'audio-file-item';
-    item.innerHTML = `
-        <div class="d-flex align-items-center justify-content-between mb-2">
-            <div class="d-flex align-items-center">
-                <i class="bi ${icon} fs-4 me-3 text-primary"></i>
-                <strong>${title}</strong>
+    displayVoiceResults(voices, sampleRate) {
+        const resultsDiv = document.getElementById('voiceResults');
+        
+        const voiceLabels = {
+            'voice_1': '🎤 Speaker 1',
+            'voice_2': '🎤 Speaker 2',
+            'voice_3': '🎤 Speaker 3',
+            'voice_4': '🎤 Speaker 4'
+        };
+        
+        let html = '<div class="voices-container">';
+        html += '<h4 class="mb-4" style="color: var(--heading-color); font-weight: 600;">🗣️ Separated Voices</h4>';
+        html += '<p class="text-muted mb-4">Control individual speaker volumes with the sliders below</p>';
+        html += '<div class="row">';
+        
+        Object.keys(voiceLabels).forEach(voiceKey => {
+            if (voices[voiceKey]) {
+                html += `
+                    <div class="col-md-6 mb-3">
+                        <div class="stem-card">
+                            <div class="stem-header">
+                                <h5>${voiceLabels[voiceKey]}</h5>
+                                <span class="gain-value" id="${voiceKey}-gain-value">100%</span>
+                            </div>
+                            <audio controls class="w-100 mb-2" src="${voices[voiceKey]}"></audio>
+                            <div class="gain-control">
+                                <label><i class="bi bi-volume-up"></i></label>
+                                <input type="range" 
+                                       class="form-range voice-gain-slider" 
+                                       min="0" 
+                                       max="100" 
+                                       value="100" 
+                                       data-voice="${voiceKey}"
+                                       id="${voiceKey}-gain">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+        
+        html += '</div>';
+        
+        html += `
+            <div class="mt-4 text-center">
+                <button class="btn btn-primary btn-lg" id="mixVoicesBtn">
+                    <i class="bi bi-soundwave"></i> Mix All Voices with Current Gains
+                </button>
             </div>
-            <button class="btn btn-sm btn-primary" onclick="downloadFile('${key}')">
-                <i class="bi bi-download"></i> Download
-            </button>
-        </div>
-        <audio controls class="w-100" preload="metadata">
-            <source src="${fileUrl}" type="audio/wav">
-            Your browser does not support the audio element.
-        </audio>
-    `;
-    container.appendChild(item);
+            <div id="mixedVoiceContainer" class="mt-4"></div>
+        `;
+        
+        html += '</div>';
+        
+        resultsDiv.innerHTML = html;
+        
+        document.querySelectorAll('.voice-gain-slider').forEach(slider => {
+            slider.addEventListener('input', (e) => {
+                const voiceKey = e.target.dataset.voice;
+                const value = e.target.value;
+                document.getElementById(`${voiceKey}-gain-value`).textContent = `${value}%`;
+            });
+        });
+        
+        const mixBtn = document.getElementById('mixVoicesBtn');
+        if (mixBtn) {
+            mixBtn.addEventListener('click', () => this.mixVoices());
+        }
+    }
     
-    console.log(`✅ Created audio player for ${title}`);
+    async mixStems() {
+        try {
+            const statusDiv = document.getElementById('musicStatus');
+            this.showLoading(statusDiv, 'Mixing stems with current gain levels...');
+            
+            const gains = {};
+            document.querySelectorAll('.stem-gain-slider').forEach(slider => {
+                const stemName = slider.dataset.stem;
+                gains[stemName] = parseFloat(slider.value) / 100;
+            });
+            
+            const response = await fetch(`${API_BASE}/mix_stems`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    stems: this.currentStems,
+                    gains: gains,
+                    sample_rate: this.sampleRate
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.error || 'Mixing failed');
+            }
+            
+            this.displayMixedResult(data, 'mixedAudioContainer');
+            this.showSuccess(statusDiv, 'Stems mixed successfully!');
+            
+        } catch (error) {
+            console.error('Mix error:', error);
+            this.showError(document.getElementById('musicStatus'), error.message);
+        }
+    }
+    
+    async mixVoices() {
+        try {
+            const statusDiv = document.getElementById('voiceStatus');
+            this.showLoading(statusDiv, 'Mixing voices with current gain levels...');
+            
+            const gains = {};
+            document.querySelectorAll('.voice-gain-slider').forEach(slider => {
+                const voiceKey = slider.dataset.voice;
+                gains[voiceKey] = parseFloat(slider.value) / 100;
+            });
+            
+            const response = await fetch(`${API_BASE}/mix_stems`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    stems: this.currentVoices,
+                    gains: gains,
+                    sample_rate: this.sampleRate
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.error || 'Mixing failed');
+            }
+            
+            this.displayMixedResult(data, 'mixedVoiceContainer');
+            this.showSuccess(statusDiv, 'Voices mixed successfully!');
+            
+        } catch (error) {
+            console.error('Mix error:', error);
+            this.showError(document.getElementById('voiceStatus'), error.message);
+        }
+    }
+    
+    displayMixedResult(data, containerId) {
+        const container = document.getElementById(containerId);
+        
+        // Store frequency data for export
+        this.lastFrequencyData = data.frequency_data;
+        
+        let html = `
+            <div class="mixed-audio-card">
+                <h5><i class="bi bi-soundwave"></i> Mixed Output</h5>
+                <p class="mb-3">Your custom mix is ready!</p>
+                
+                <audio controls class="w-100 mb-3" src="${data.mixed_audio}"></audio>
+                
+                <div class="row g-2 mb-3">
+                    <div class="col-md-6">
+                        <button class="btn btn-success w-100" onclick="aiController.downloadAudio('${data.mixed_audio}', 'mixed_audio.wav')">
+                            <i class="bi bi-download"></i> Download Audio
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <button class="btn btn-light w-100" onclick="aiController.exportFrequencyData()">
+                            <i class="bi bi-file-earmark-spreadsheet"></i> Export Spectrum CSV
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="frequency-plot-container mt-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0"><i class="bi bi-graph-up"></i> Frequency Spectrum (Custom FFT)</h6>
+                        <span class="badge bg-info">Sample Rate: ${data.sample_rate} Hz</span>
+                    </div>
+                    <canvas id="frequencyCanvas_${containerId}" style="width: 100%; height: 300px; background: white; border-radius: 8px;"></canvas>
+                    
+                    <div class="spectrum-stats mt-3">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <small class="text-white-50">Peak Frequency</small>
+                                <div class="fw-bold" id="peakFreq_${containerId}">-</div>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-white-50">Max Magnitude</small>
+                                <div class="fw-bold" id="maxMag_${containerId}">-</div>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-white-50">Data Points</small>
+                                <div class="fw-bold">${data.frequency_data?.frequencies?.length || 0}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.innerHTML = html;
+        
+        if (data.frequency_data) {
+            this.plotFrequencySpectrum(
+                data.frequency_data.frequencies,
+                data.frequency_data.magnitudes,
+                `frequencyCanvas_${containerId}`
+            );
+            
+            const magnitudes = data.frequency_data.magnitudes;
+            const frequencies = data.frequency_data.frequencies;
+            const maxMagIdx = magnitudes.indexOf(Math.max(...magnitudes));
+            
+            document.getElementById(`peakFreq_${containerId}`).textContent = 
+                `${frequencies[maxMagIdx].toFixed(1)} Hz`;
+            document.getElementById(`maxMag_${containerId}`).textContent = 
+                magnitudes[maxMagIdx].toFixed(2);
+        }
+    }
+    
+    plotFrequencySpectrum(frequencies, magnitudes, canvasId) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) {
+            console.error('Canvas not found:', canvasId);
+            return;
+        }
+        
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width = canvas.offsetWidth * 2; // Retina display
+        const height = canvas.height = canvas.offsetHeight * 2;
+        ctx.scale(2, 2);
+        
+        const displayWidth = canvas.offsetWidth;
+        const displayHeight = canvas.offsetHeight;
+        
+        // Clear canvas with gradient background
+        const gradient = ctx.createLinearGradient(0, 0, 0, displayHeight);
+        gradient.addColorStop(0, '#ffffff');
+        gradient.addColorStop(1, '#f8f9fa');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, displayWidth, displayHeight);
+        
+        // Margins
+        const margin = { top: 20, right: 20, bottom: 40, left: 60 };
+        const plotWidth = displayWidth - margin.left - margin.right;
+        const plotHeight = displayHeight - margin.top - margin.bottom;
+        
+        // Draw grid
+        ctx.strokeStyle = '#e0e0e0';
+        ctx.lineWidth = 0.5;
+        
+        // Horizontal grid lines
+        for (let i = 0; i <= 5; i++) {
+            const y = margin.top + (i / 5) * plotHeight;
+            ctx.beginPath();
+            ctx.moveTo(margin.left, y);
+            ctx.lineTo(margin.left + plotWidth, y);
+            ctx.stroke();
+        }
+        
+        // Vertical grid lines
+        for (let i = 0; i <= 10; i++) {
+            const x = margin.left + (i / 10) * plotWidth;
+            ctx.beginPath();
+            ctx.moveTo(x, margin.top);
+            ctx.lineTo(x, margin.top + plotHeight);
+            ctx.stroke();
+        }
+        
+        // Draw axes
+        ctx.strokeStyle = '#333333';
+        ctx.lineWidth = 2;
+        
+        // Y-axis
+        ctx.beginPath();
+        ctx.moveTo(margin.left, margin.top);
+        ctx.lineTo(margin.left, margin.top + plotHeight);
+        ctx.stroke();
+        
+        // X-axis
+        ctx.beginPath();
+        ctx.moveTo(margin.left, margin.top + plotHeight);
+        ctx.lineTo(margin.left + plotWidth, margin.top + plotHeight);
+        ctx.stroke();
+        
+        // Find max magnitude for scaling
+        const maxMag = Math.max(...magnitudes);
+        const minMag = Math.min(...magnitudes.filter(m => m > 0));
+        
+        // Plot data
+        ctx.strokeStyle = '#667eea';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        
+        for (let i = 0; i < frequencies.length; i++) {
+            const x = margin.left + (i / (frequencies.length - 1)) * plotWidth;
+            const normalizedMag = (magnitudes[i] - minMag) / (maxMag - minMag);
+            const y = margin.top + plotHeight - (normalizedMag * plotHeight);
+            
+            if (i === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        }
+        
+        ctx.stroke();
+        
+        // Fill area under curve
+        ctx.lineTo(margin.left + plotWidth, margin.top + plotHeight);
+        ctx.lineTo(margin.left, margin.top + plotHeight);
+        ctx.closePath();
+        
+        const fillGradient = ctx.createLinearGradient(0, margin.top, 0, margin.top + plotHeight);
+        fillGradient.addColorStop(0, 'rgba(102, 126, 234, 0.3)');
+        fillGradient.addColorStop(1, 'rgba(102, 126, 234, 0.05)');
+        ctx.fillStyle = fillGradient;
+        ctx.fill();
+        
+        // Y-axis labels (magnitude)
+        ctx.fillStyle = '#333333';
+        ctx.font = '11px Arial';
+        ctx.textAlign = 'right';
+        
+        for (let i = 0; i <= 5; i++) {
+            const y = margin.top + (i / 5) * plotHeight;
+            const value = maxMag - (i / 5) * (maxMag - minMag);
+            ctx.fillText(value.toFixed(0), margin.left - 10, y + 4);
+        }
+        
+        // X-axis labels (frequency)
+        ctx.textAlign = 'center';
+        const freqMarkers = [
+            { freq: 0, label: '0' },
+            { freq: 100, label: '100' },
+            { freq: 500, label: '500' },
+            { freq: 1000, label: '1K' },
+            { freq: 2000, label: '2K' },
+            { freq: 5000, label: '5K' },
+            { freq: 10000, label: '10K' },
+            { freq: 20000, label: '20K' }
+        ];
+        
+        freqMarkers.forEach(marker => {
+            const maxFreq = frequencies[frequencies.length - 1];
+            if (marker.freq <= maxFreq) {
+                const idx = frequencies.findIndex(f => f >= marker.freq);
+                if (idx !== -1) {
+                    const x = margin.left + (idx / (frequencies.length - 1)) * plotWidth;
+                    ctx.fillText(marker.label, x, margin.top + plotHeight + 20);
+                    
+                    // Tick marks
+                    ctx.strokeStyle = '#333333';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(x, margin.top + plotHeight);
+                    ctx.lineTo(x, margin.top + plotHeight + 5);
+                    ctx.stroke();
+                }
+            }
+        });
+        
+        // Axis labels
+        ctx.fillStyle = '#333333';
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Frequency (Hz)', margin.left + plotWidth / 2, displayHeight - 5);
+        
+        ctx.save();
+        ctx.translate(15, margin.top + plotHeight / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText('Magnitude', 0, 0);
+        ctx.restore();
+        
+        // Add hover interaction
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = (e.clientX - rect.left) * 2;
+            
+            if (mouseX >= margin.left && mouseX <= margin.left + plotWidth) {
+                const idx = Math.floor(((mouseX - margin.left) / plotWidth) * frequencies.length);
+                
+                if (idx >= 0 && idx < frequencies.length) {
+                    canvas.title = `Frequency: ${frequencies[idx].toFixed(2)} Hz\nMagnitude: ${magnitudes[idx].toFixed(2)}`;
+                }
+            }
+        });
+        
+        console.log(`✅ Frequency spectrum plotted on ${canvasId}`);
+    }
+    
+    exportFrequencyData() {
+        if (!this.lastFrequencyData) {
+            alert('No frequency data available to export');
+            return;
+        }
+        
+        const frequencies = this.lastFrequencyData.frequencies;
+        const magnitudes = this.lastFrequencyData.magnitudes;
+        
+        // Create CSV data
+        let csv = 'Frequency (Hz),Magnitude\n';
+        for (let i = 0; i < frequencies.length; i++) {
+            csv += `${frequencies[i]},${magnitudes[i]}\n`;
+        }
+        
+        // Download CSV
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'frequency_spectrum.csv';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        console.log('✅ Frequency data exported');
+    }
+    
+    downloadAudio(dataUri, filename) {
+        const link = document.createElement('a');
+        link.href = dataUri;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+    
+    showLoading(element, message) {
+        element.innerHTML = `
+            <div class="alert alert-info">
+                <div class="spinner-border spinner-border-sm me-2" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                ${message}
+            </div>
+        `;
+    }
+    
+    showSuccess(element, message) {
+        element.innerHTML = `
+            <div class="alert alert-success">
+                <i class="bi bi-check-circle me-2"></i>${message}
+            </div>
+        `;
+    }
+    
+    showError(element, message) {
+        element.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle me-2"></i>${message}
+            </div>
+        `;
+    }
 }
 
-// ============================================================================
-// DOWNLOAD
-// ============================================================================
-
-function downloadFile(key) {
-    if (!separatedFiles[key]) return;
-    
-    const link = document.createElement('a');
-    link.href = separatedFiles[key].url;
-    link.download = separatedFiles[key].filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    console.log(`✅ Download started: ${separatedFiles[key].filename}`);
-}
-
-function downloadAll() {
-    console.log('⬇️ Downloading all files...');
-    
-    Object.keys(separatedFiles).forEach((key, index) => {
-        setTimeout(() => downloadFile(key), index * 500);
-    });
-    
-    showSuccess(`Downloading ${Object.keys(separatedFiles).length} files...`);
-}
-
-// ============================================================================
-// RESET
-// ============================================================================
-
-function resetAll() {
-    console.log('🔄 Resetting...');
-    
-    // Stop all audio
-    document.querySelectorAll('audio').forEach(audio => {
-        audio.pause();
-        audio.currentTime = 0;
-    });
-    
-    // Clear state
-    uploadedFile = null;
-    currentMode = null;
-    separatedFiles = {};
-    
-    // Reset UI
-    document.getElementById('audioFile').value = '';
-    document.getElementById('fileInfo').textContent = 'No file selected';
-    document.getElementById('aiModeSelect').disabled = true;
-    document.getElementById('aiModeSelect').innerHTML = '<option value="">Please upload audio first</option>';
-    document.getElementById('separateButton').disabled = true;
-    document.getElementById('separateButton').innerHTML = '<i class="bi bi-cpu-fill"></i> Start Separation';
-    
-    document.getElementById('musicSettings').classList.add('hidden');
-    document.getElementById('voiceSettings').classList.add('hidden');
-    document.getElementById('originalFileSection').classList.add('hidden');
-    document.getElementById('resultsSection').classList.add('hidden');
-    document.getElementById('progressContainer').classList.add('hidden');
-    
-    console.log('✅ Reset complete');
-}
-
-// ============================================================================
-// NOTIFICATIONS
-// ============================================================================
-
-function showError(message) {
-    console.error('❌ Error:', message);
-    alert('Error: ' + message);
-}
-
-function showSuccess(message) {
-    console.log('✅ Success:', message);
-    
-    const notification = document.createElement('div');
-    notification.className = 'alert alert-success alert-dismissible fade show';
-    notification.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 10000; min-width: 300px;';
-    notification.innerHTML = `
-        <i class="bi bi-check-circle-fill"></i> ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    document.body.appendChild(notification);
-    setTimeout(() => notification.remove(), 3000);
-}
-
-console.log('✅ AI Mode JavaScript loaded successfully');
+let aiController;
+document.addEventListener('DOMContentLoaded', () => {
+    aiController = new AISeparationController();
+    console.log('✅ AI Mode ready');
+});
