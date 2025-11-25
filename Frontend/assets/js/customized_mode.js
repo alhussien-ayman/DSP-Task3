@@ -15,6 +15,23 @@ let gainValues = {};
 let currentSettings = null;
 let currentAudioBuffer = null;
 let processedAudioBuffer = null;
+let currentPlaybackTime = 0;
+let currentPlaybackBuffer = null;
+let isProcessing = false;
+
+// Request tracking variables
+let currentRequestId = 0;
+let pendingRequests = new Map();
+let lastSuccessfulRequestId = 0;
+let lastProcessedGains = null;
+
+// Playback synchronization variables
+let playbackStartTime = 0;
+let playbackOffset = 0;
+
+// Real-time processing variables
+let processingDebounce = null;
+const PROCESSING_DEBOUNCE_MS = 700; // 700ms delay before backend processing
 
 // Backend API base URL
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -27,15 +44,16 @@ const elements = {
     modeSelect: document.getElementById('modeSelect'),
     modeStatus: document.getElementById('modeStatus'),
     equalizerControls: document.getElementById('equalizerControls'),
-    applyButton: document.getElementById('applyButton'),
     processStatus: document.getElementById('processStatus'),
     outputSection: document.getElementById('outputSection'),
     playInputBtn: document.getElementById('playInputBtn'),
     playOutputBtn: document.getElementById('playOutputBtn'),
     pauseBtn: document.getElementById('pauseBtn'),
-    stopBtn: document.getElementById('stopBtn'),
+    pauseOutputBtn: document.getElementById('pauseOutputBtn'),
     speedControl: document.getElementById('speedControl'),
     speedValue: document.getElementById('speedValue'),
+    speedControlOutput: document.getElementById('speedControlOutput'),
+    speedValueOutput: document.getElementById('speedValueOutput'),
     inputLinearScale: document.getElementById('inputLinearScale'),
     inputAudiogramScale: document.getElementById('inputAudiogramScale'),
     outputLinearScale: document.getElementById('outputLinearScale'),
@@ -44,11 +62,10 @@ const elements = {
     outputSpectrogramToggle: document.getElementById('outputSpectrogramToggle'),
     downloadBtn: document.getElementById('downloadBtn'),
     resetBtn: document.getElementById('resetBtn'),
-    resetViewBtn: document.getElementById('resetViewBtn'),
     saveSettingsBtn: document.getElementById('saveSettingsBtn')
 };
 
-// Plotly configuration
+// Plotly configuration with synchronized zoom
 const plotlyConfig = {
     displayModeBar: true,
     displaylogo: false,
@@ -62,9 +79,16 @@ const plotlyConfig = {
     scrollZoom: true
 };
 
+// Global ranges for synchronization
+let globalTimeRange = [0, 1];
+let globalFreqRange = [0, 1];
+
 // Initialize application
 function init() {
     console.log("🚀 Initializing Signal Equalizer...");
+    
+    // Show output section from the start
+    elements.outputSection.classList.remove('hidden');
     
     // Initialize audio context
     try {
@@ -76,23 +100,22 @@ function init() {
         return;
     }
     
-    // Test backend connection first
-   // Setup event listeners first
-setupEventListeners();
+    // Setup reset buttons FIRST to ensure they're available
+    setupResetButtons();
+    
+    // Then setup other event listeners
+    setupEventListeners();
 
-// Test backend connection
-testBackendConnection().then(() => {
+    // Initialize plots
     initializePlots();
-    // Setup reset buttons after plots are initialized
-    setupResetButtons();
-    updateUIState();
-}).catch(error => {
-    console.error("Backend connection failed, continuing with limited functionality");
-    initializePlots();
-    // Setup reset buttons after plots are initialized
-    setupResetButtons();
-    updateUIState();
-});
+
+    // Test backend connection
+    testBackendConnection().then(() => {
+        updateUIState();
+    }).catch(error => {
+        console.error("Backend connection failed, continuing with limited functionality");
+        updateUIState();
+    });
     
     window.addEventListener('scroll', function() {
         const scrollTop = document.getElementById('scroll-top');
@@ -109,19 +132,11 @@ async function testBackendConnection() {
     try {
         console.log('🔌 Testing backend connection...');
         
-        // Test basic endpoint first
         const testResponse = await fetch(`${API_BASE_URL}/test`);
         if (!testResponse.ok) throw new Error(`Backend test failed: ${testResponse.status}`);
         
         const testResult = await testResponse.json();
         console.log('✅ Backend test:', testResult.message);
-        
-        // Test health endpoint
-        const healthResponse = await fetch(`${API_BASE_URL}/health`);
-        if (healthResponse.ok) {
-            const health = await healthResponse.json();
-            console.log('✅ Backend health:', health);
-        }
         
         elements.fileInfo.innerHTML = `<span class="status-indicator status-ready">
             <i class="bi bi-check-circle"></i> Backend connected successfully
@@ -153,17 +168,15 @@ function setupEventListeners() {
     // Mode selection
     elements.modeSelect.addEventListener('change', (e) => switchMode(e.target.value));
     
-    // Apply button
-    elements.applyButton.addEventListener('click', processSignal);
-    
     // Playback controls
-    elements.playInputBtn.addEventListener('click', playInput);
-    elements.playOutputBtn.addEventListener('click', playOutput);
+    elements.playInputBtn.addEventListener('click', () => playAudio('input'));
+    elements.playOutputBtn.addEventListener('click', () => playAudio('output'));
     elements.pauseBtn.addEventListener('click', pauseSignal);
-    elements.stopBtn.addEventListener('click', stopSignal);
+    elements.pauseOutputBtn.addEventListener('click', pauseSignal);
     
-    // Speed control
+    // Speed control - SYNC BOTH CONTROLS
     elements.speedControl.addEventListener('input', (e) => setSpeed(e.target.value));
+    elements.speedControlOutput.addEventListener('input', (e) => setSpeed(e.target.value));
     
     // Scale controls
     elements.inputLinearScale.addEventListener('click', () => setInputScale('linear'));
@@ -178,103 +191,69 @@ function setupEventListeners() {
     // Output controls
     elements.downloadBtn.addEventListener('click', downloadOutput);
     elements.resetBtn.addEventListener('click', resetEqualizer);
-    elements.resetViewBtn.addEventListener('click', resetView);
     elements.saveSettingsBtn.addEventListener('click', saveSettings);
-   // Reset button event listeners - direct binding
-   
 }
 
 // Setup reset buttons with direct event listeners
 function setupResetButtons() {
     console.log("🔧 Setting up reset buttons...");
     
-    // Debug: Check if buttons exist
-    console.log("🔍 Checking reset buttons:");
-    const buttonIds = [
-        'resetInputSignalBtn', 'resetInputFourierBtn', 'resetInputSpectrogramBtn',
-        'resetOutputSignalBtn', 'resetOutputFourierBtn', 'resetOutputSpectrogramBtn'
-    ];
-    
-    buttonIds.forEach(id => {
-        const btn = document.getElementById(id);
-        console.log(`- ${id}:`, btn ? 'FOUND' : 'NOT FOUND');
-    });
-    
     // Reset Input Signal
     const resetInputSignalBtn = document.getElementById('resetInputSignalBtn');
     if (resetInputSignalBtn) {
-        resetInputSignalBtn.addEventListener('click', function() {
-            console.log("🎯 resetInputSignalBtn CLICKED!");
-            resetInputSignal();
-        });
-        console.log("✅ resetInputSignalBtn event listener added");
+        resetInputSignalBtn.addEventListener('click', resetInputSignal);
+        console.log("✅ Reset Input Signal button attached");
     } else {
-        console.log("❌ resetInputSignalBtn NOT FOUND");
+        console.error("❌ Reset Input Signal button not found");
     }
     
     // Reset Input Fourier
     const resetInputFourierBtn = document.getElementById('resetInputFourierBtn');
     if (resetInputFourierBtn) {
-        resetInputFourierBtn.addEventListener('click', function() {
-            console.log("🎯 resetInputFourierBtn CLICKED!");
-            resetInputFourier();
-        });
-        console.log("✅ resetInputFourierBtn event listener added");
+        resetInputFourierBtn.addEventListener('click', resetInputFourier);
+        console.log("✅ Reset Input Fourier button attached");
     } else {
-        console.log("❌ resetInputFourierBtn NOT FOUND");
+        console.error("❌ Reset Input Fourier button not found");
     }
     
     // Reset Input Spectrogram
     const resetInputSpectrogramBtn = document.getElementById('resetInputSpectrogramBtn');
     if (resetInputSpectrogramBtn) {
-        resetInputSpectrogramBtn.addEventListener('click', function() {
-            console.log("🎯 resetInputSpectrogramBtn CLICKED!");
-            resetInputSpectrogram();
-        });
-        console.log("✅ resetInputSpectrogramBtn event listener added");
+        resetInputSpectrogramBtn.addEventListener('click', resetInputSpectrogram);
+        console.log("✅ Reset Input Spectrogram button attached");
     } else {
-        console.log("❌ resetInputSpectrogramBtn NOT FOUND");
+        console.error("❌ Reset Input Spectrogram button not found");
     }
     
     // Reset Output Signal
     const resetOutputSignalBtn = document.getElementById('resetOutputSignalBtn');
     if (resetOutputSignalBtn) {
-        resetOutputSignalBtn.addEventListener('click', function() {
-            console.log("🎯 resetOutputSignalBtn CLICKED!");
-            resetOutputSignal();
-        });
-        console.log("✅ resetOutputSignalBtn event listener added");
+        resetOutputSignalBtn.addEventListener('click', resetOutputSignal);
+        console.log("✅ Reset Output Signal button attached");
     } else {
-        console.log("❌ resetOutputSignalBtn NOT FOUND");
+        console.error("❌ Reset Output Signal button not found");
     }
     
     // Reset Output Fourier
     const resetOutputFourierBtn = document.getElementById('resetOutputFourierBtn');
     if (resetOutputFourierBtn) {
-        resetOutputFourierBtn.addEventListener('click', function() {
-            console.log("🎯 resetOutputFourierBtn CLICKED!");
-            resetOutputFourier();
-        });
-        console.log("✅ resetOutputFourierBtn event listener added");
+        resetOutputFourierBtn.addEventListener('click', resetOutputFourier);
+        console.log("✅ Reset Output Fourier button attached");
     } else {
-        console.log("❌ resetOutputFourierBtn NOT FOUND");
+        console.error("❌ Reset Output Fourier button not found");
     }
     
     // Reset Output Spectrogram
     const resetOutputSpectrogramBtn = document.getElementById('resetOutputSpectrogramBtn');
     if (resetOutputSpectrogramBtn) {
-        resetOutputSpectrogramBtn.addEventListener('click', function() {
-            console.log("🎯 resetOutputSpectrogramBtn CLICKED!");
-            resetOutputSpectrogram();
-        });
-        console.log("✅ resetOutputSpectrogramBtn event listener added");
+        resetOutputSpectrogramBtn.addEventListener('click', resetOutputSpectrogram);
+        console.log("✅ Reset Output Spectrogram button attached");
     } else {
-        console.log("❌ resetOutputSpectrogramBtn NOT FOUND");
+        console.error("❌ Reset Output Spectrogram button not found");
     }
 }
-  
 
-// Initialize empty Plotly charts
+// Initialize empty Plotly charts with synchronized zoom
 function initializePlots() {
     console.log("📊 Initializing plots...");
     
@@ -297,7 +276,8 @@ function initializePlots() {
             title: 'Frequency (Hz)', 
             type: 'linear', 
             gridcolor: '#f8f9fa',
-            linecolor: '#E9ECEF'
+            linecolor: '#E9ECEF',
+            range: globalFreqRange
         },
         yaxis: { 
             title: 'Magnitude', 
@@ -322,7 +302,8 @@ function initializePlots() {
             title: 'Frequency (Hz)', 
             type: 'linear', 
             gridcolor: '#f8f9fa',
-            linecolor: '#E9ECEF'
+            linecolor: '#E9ECEF',
+            range: globalFreqRange
         },
         yaxis: { 
             title: 'Magnitude', 
@@ -348,11 +329,13 @@ function initializePlots() {
         margin: { t: 10, r: 30, b: 50, l: 60 },
         xaxis: { 
             title: 'Time (s)',
-            linecolor: '#E9ECEF'
+            linecolor: '#E9ECEF',
+            range: globalTimeRange
         },
         yaxis: { 
             title: 'Frequency (Hz)',
-            linecolor: '#E9ECEF'
+            linecolor: '#E9ECEF',
+            range: globalFreqRange
         },
         plot_bgcolor: '#000000'
     }, plotlyConfig);
@@ -371,16 +354,161 @@ function initializePlots() {
         margin: { t: 10, r: 30, b: 50, l: 60 },
         xaxis: { 
             title: 'Time (s)',
-            linecolor: '#E9ECEF'
+            linecolor: '#E9ECEF',
+            range: globalTimeRange
         },
         yaxis: { 
             title: 'Frequency (Hz)',
-            linecolor: '#E9ECEF'
+            linecolor: '#E9ECEF',
+            range: globalFreqRange
         },
         plot_bgcolor: '#000000'
     }, plotlyConfig);
     
     console.log("✅ All plots initialized");
+    
+    // Setup synchronized zoom after plots are created
+    setupSynchronizedZoom();
+}
+
+// More robust synchronization setup with retry mechanism
+function setupSynchronizedZoom() {
+    console.log("🔄 Setting up synchronized zoom...");
+    
+    let retryCount = 0;
+    const maxRetries = 5;
+    
+    const trySetupSync = () => {
+        const plotPairs = [
+            ['inputSignalPlot', 'outputSignalPlot'],
+            ['inputFourierPlot', 'outputFourierPlot'],
+            ['inputSpectrogramPlot', 'outputSpectrogramPlot']
+        ];
+        
+        let allPlotsFound = true;
+        
+        plotPairs.forEach(([plot1Id, plot2Id]) => {
+            const plot1 = document.getElementById(plot1Id);
+            const plot2 = document.getElementById(plot2Id);
+            
+            if (plot1 && plot2) {
+                syncPlots(plot1Id, plot2Id);
+                console.log(`✅ Synced ${plot1Id} with ${plot2Id}`);
+            } else {
+                console.warn(`⚠️ Plots not ready: ${plot1Id}, ${plot2Id}`);
+                allPlotsFound = false;
+            }
+        });
+        
+        if (!allPlotsFound && retryCount < maxRetries) {
+            retryCount++;
+            console.log(`🔄 Retrying synchronization setup (attempt ${retryCount})...`);
+            setTimeout(trySetupSync, 500);
+        } else if (allPlotsFound) {
+            console.log("✅ All plots synchronized successfully");
+        } else {
+            console.error("❌ Failed to synchronize all plots after retries");
+        }
+    };
+    
+    trySetupSync();
+}
+
+// Robust helper function to synchronize two plots
+function syncPlots(plot1Id, plot2Id) {
+    const plot1 = document.getElementById(plot1Id);
+    const plot2 = document.getElementById(plot2Id);
+    
+    if (!plot1 || !plot2) {
+        console.error(`❌ Could not find plots: ${plot1Id} and/or ${plot2Id}`);
+        return;
+    }
+    
+    console.log(`🔗 Syncing ${plot1Id} with ${plot2Id}`);
+    
+    let isSyncing = false;
+    
+    // Function to handle synchronization
+    const syncHandler = (sourcePlot, targetPlot, eventData) => {
+        if (isSyncing) return;
+        isSyncing = true;
+        
+        const update = {};
+        
+        // Handle all possible range and autorange changes
+        const rangeProperties = [
+            'xaxis.range', 'yaxis.range',
+            'xaxis.autorange', 'yaxis.autorange',
+            'xaxis.range[0]', 'xaxis.range[1]',
+            'yaxis.range[0]', 'yaxis.range[1]'
+        ];
+        
+        rangeProperties.forEach(prop => {
+            if (eventData[prop] !== undefined) {
+                update[prop] = eventData[prop];
+            }
+        });
+        
+        // Also handle domain changes for subplots
+        if (eventData['xaxis.domain'] !== undefined) {
+            update['xaxis.domain'] = eventData['xaxis.domain'];
+        }
+        if (eventData['yaxis.domain'] !== undefined) {
+            update['yaxis.domain'] = eventData['yaxis.domain'];
+        }
+        
+        // Apply the update if there are any changes
+        if (Object.keys(update).length > 0) {
+            Plotly.relayout(targetPlot, update)
+                .then(() => {
+                    isSyncing = false;
+                })
+                .catch(error => {
+                    console.error('Error during sync:', error);
+                    isSyncing = false;
+                });
+        } else {
+            isSyncing = false;
+        }
+    };
+    
+    // Set up event listeners for both directions
+    plot1.on('plotly_relayout', function(eventData) {
+        syncHandler(plot1, plot2, eventData);
+    });
+    
+    plot2.on('plotly_relayout', function(eventData) {
+        syncHandler(plot2, plot1, eventData);
+    });
+    
+    // Also sync double-click events for reset
+    plot1.on('plotly_doubleclick', function() {
+        if (isSyncing) return;
+        isSyncing = true;
+        Plotly.relayout(plot2, {
+            'xaxis.autorange': true,
+            'yaxis.autorange': true
+        }).then(() => {
+            isSyncing = false;
+        });
+    });
+    
+    plot2.on('plotly_doubleclick', function() {
+        if (isSyncing) return;
+        isSyncing = true;
+        Plotly.relayout(plot1, {
+            'xaxis.autorange': true,
+            'yaxis.autorange': true
+        }).then(() => {
+            isSyncing = false;
+        });
+    });
+}
+
+// Re-synchronize plots after updates
+function resyncPlotsAfterUpdate() {
+    console.log("🔄 Re-establishing plot synchronization...");
+    setupSynchronizedZoom();
 }
 
 // Initialize empty plot with professional styling
@@ -397,7 +525,8 @@ function initializeEmptyPlot(elementId, title, color = '#FF6B35') {
             title: 'Time (s)', 
             gridcolor: '#f8f9fa',
             linecolor: '#E9ECEF',
-            showgrid: true
+            showgrid: true,
+            range: globalTimeRange
         },
         yaxis: { 
             title: 'Amplitude', 
@@ -414,6 +543,9 @@ function initializeEmptyPlot(elementId, title, color = '#FF6B35') {
 
 // Update UI state based on audio loading
 function updateUIState() {
+    // Always show output section (moved this logic out)
+    elements.outputSection.classList.remove('hidden');
+    
     if (isAudioLoaded) {
         elements.modeSelect.disabled = false;
         elements.modeSelect.innerHTML = `
@@ -422,13 +554,17 @@ function updateUIState() {
             <option value="animals">Animal Sounds</option>
             <option value="voices">Human Voices</option>
         `;
-        elements.applyButton.disabled = false;
+        
         elements.playInputBtn.disabled = false;
+        elements.playOutputBtn.disabled = false;
         elements.pauseBtn.disabled = false;
-        elements.stopBtn.disabled = false;
+        elements.pauseOutputBtn.disabled = false;
         elements.speedControl.disabled = false;
+        elements.speedControlOutput.disabled = false;
         elements.inputLinearScale.disabled = false;
         elements.inputAudiogramScale.disabled = false;
+        elements.outputLinearScale.disabled = false;
+        elements.outputAudiogramScale.disabled = false;
         
         elements.modeStatus.className = 'status-indicator status-ready';
         elements.modeStatus.innerHTML = '<i class="bi bi-check-circle"></i> Mode selection ready';
@@ -437,12 +573,12 @@ function updateUIState() {
     } else {
         elements.modeSelect.disabled = true;
         elements.modeSelect.innerHTML = '<option value="">Please upload audio first</option>';
-        elements.applyButton.disabled = true;
         elements.playInputBtn.disabled = true;
         elements.playOutputBtn.disabled = true;
         elements.pauseBtn.disabled = true;
-        elements.stopBtn.disabled = true;
+        elements.pauseOutputBtn.disabled = true;
         elements.speedControl.disabled = true;
+        elements.speedControlOutput.disabled = true;
         elements.inputLinearScale.disabled = true;
         elements.inputAudiogramScale.disabled = true;
         elements.outputLinearScale.disabled = true;
@@ -471,10 +607,11 @@ async function loadAudioFile(file) {
         // Create audio buffer for frontend playback and visualization
         const arrayBuffer = await file.arrayBuffer();
         currentAudioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        processedAudioBuffer = currentAudioBuffer; // Initialize output with input
         
         isAudioLoaded = true;
         
-        // Update UI
+        // Update UI and show both sections
         updateUIState();
         
         // Get input visualizations from backend
@@ -519,8 +656,9 @@ async function getInputVisualizations(file) {
             throw new Error(result.error || 'Input visualization failed');
         }
         
-        // Update input visualizations with backend data
+        // Update both input and output visualizations with the same data initially
         updateInputVisualizations(result);
+        updateOutputVisualizations(result);
         
         elements.processStatus.innerHTML = '<i class="bi bi-check-circle"></i> Input visualizations ready';
         
@@ -530,14 +668,22 @@ async function getInputVisualizations(file) {
     }
 }
 
-// Update input visualizations from backend response
+// Update input visualizations from backend response - FIXED VERSION
 function updateInputVisualizations(result) {
     console.log("🔄 Updating input visualizations...");
     
+    // Calculate consistent ranges
+    let timeRange = [0, 1];
+    let freqRange = [0, 1];
+    
     // Update input signal plot
     if (result.input_signal && result.input_signal.time) {
+        const times = result.input_signal.time;
+        timeRange = [0, Math.max(...times)];
+        globalTimeRange = timeRange;
+        
         Plotly.react('inputSignalPlot', [{
-            x: result.input_signal.time,
+            x: times,
             y: result.input_signal.amplitude,
             type: 'scatter',
             mode: 'lines',
@@ -545,40 +691,60 @@ function updateInputVisualizations(result) {
             name: 'Input Signal'
         }], {
             margin: { t: 10, r: 30, b: 50, l: 60 },
-            xaxis: { title: 'Time (s)' },
-            yaxis: { title: 'Amplitude' }
+            xaxis: { 
+                title: 'Time (s)',
+                range: timeRange,
+                fixedrange: false
+            },
+            yaxis: { 
+                title: 'Amplitude',
+                fixedrange: false
+            }
         });
         console.log("✅ Input signal plot updated");
     }
    
-   // Update input Fourier transform
-if (result.input_spectrogram) {
-    Plotly.react('inputFourierPlot', [{
-        x: result.input_spectrogram.frequencies,
-        y: result.input_spectrogram.magnitudes,
-        type: 'scatter',
-        mode: 'lines',
-        line: { color: '#FF6B35', width: 2 },
-        name: currentInputScale === 'audiogram' ? 'Input Audiogram' : 'Input Spectrum'
-    }], {
-        margin: { t: 10, r: 30, b: 50, l: 60 },
-        xaxis: { title: 'Frequency (Hz)' },
-        yaxis: { 
-            title: currentInputScale === 'audiogram' ? 'Relative Level (dB)' : 'Magnitude',  // ← CHANGED
-            gridcolor: '#f8f9fa',
-            linecolor: '#E9ECEF'
-        },
-        plot_bgcolor: '#FFFFFF',
-        paper_bgcolor: '#FFFFFF',
-        showlegend: false
-    });
-}
+    // Update input Fourier transform
+    if (result.input_spectrogram) {
+        const freqs = result.input_spectrogram.frequencies;
+        freqRange = [0, Math.max(...freqs)];
+        globalFreqRange = freqRange;
+        
+        Plotly.react('inputFourierPlot', [{
+            x: freqs,
+            y: result.input_spectrogram.magnitudes,
+            type: 'scatter',
+            mode: 'lines',
+            line: { color: '#FF6B35', width: 2 },
+            name: currentInputScale === 'audiogram' ? 'Input Audiogram' : 'Input Spectrum'
+        }], {
+            margin: { t: 10, r: 30, b: 50, l: 60 },
+            xaxis: { 
+                title: 'Frequency (Hz)',
+                range: freqRange,
+                fixedrange: false
+            },
+            yaxis: { 
+                title: currentInputScale === 'audiogram' ? 'Relative Level (dB)' : 'Magnitude',
+                gridcolor: '#f8f9fa',
+                linecolor: '#E9ECEF',
+                fixedrange: false
+            },
+            plot_bgcolor: '#FFFFFF',
+            paper_bgcolor: '#FFFFFF',
+            showlegend: false
+        });
+    }
+    
     // Update input spectrogram if 2D data is available
     if (result.input_spectrogram_2d && result.input_spectrogram_2d.z) {
+        const specTimes = result.input_spectrogram_2d.x;
+        const specFreqs = result.input_spectrogram_2d.y;
+        
         Plotly.react('inputSpectrogramPlot', [{
             z: result.input_spectrogram_2d.z,
-            x: result.input_spectrogram_2d.x,
-            y: result.input_spectrogram_2d.y,
+            x: specTimes,
+            y: specFreqs,
             type: 'heatmap',
             colorscale: 'Viridis',
             showscale: true,
@@ -588,11 +754,166 @@ if (result.input_spectrogram) {
             name: 'Input Spectrogram'
         }], {
             margin: { t: 10, r: 30, b: 50, l: 60 },
-            xaxis: { title: 'Time (s)' },
-            yaxis: { title: 'Frequency (Hz)' }
+            xaxis: { 
+                title: 'Time (s)',
+                range: timeRange,
+                fixedrange: false
+            },
+            yaxis: { 
+                title: 'Frequency (Hz)',
+                range: freqRange,
+                fixedrange: false
+            }
         });
         console.log("✅ Input spectrogram updated");
     }
+}
+
+// Update output visualizations from backend response - FIXED VERSION
+function updateOutputVisualizations(result) {
+    console.log("🔄 Updating output visualizations...");
+    
+    // Use the same ranges as input for consistency
+    const timeRange = globalTimeRange;
+    const freqRange = globalFreqRange;
+    
+    // Update output signal plot - USE SAME TIME RANGE AS INPUT
+    if (result.output_signal && result.output_signal.time) {
+        Plotly.react('outputSignalPlot', [{
+            x: result.output_signal.time,
+            y: result.output_signal.amplitude,
+            type: 'scatter',
+            mode: 'lines',
+            line: { color: '#E55A2B', width: 1.5 },
+            name: 'Output Signal'
+        }], {
+            margin: { t: 10, r: 30, b: 50, l: 60 },
+            xaxis: { 
+                title: 'Time (s)',
+                range: timeRange, // Use same range as input
+                fixedrange: false
+            },
+            yaxis: { 
+                title: 'Amplitude',
+                fixedrange: false
+            }
+        });
+        console.log("✅ Output signal plot updated");
+    }
+   
+    // Update output Fourier transform - USE SAME FREQUENCY RANGE AS INPUT
+    if (result.output_spectrogram) {
+        Plotly.react('outputFourierPlot', [{
+            x: result.output_spectrogram.frequencies,
+            y: result.output_spectrogram.magnitudes,
+            type: 'scatter',
+            mode: 'lines',
+            line: { color: '#E55A2B', width: 2 },
+            name: 'Output Spectrum'
+        }], {
+            margin: { t: 10, r: 30, b: 50, l: 60 },
+            xaxis: { 
+                title: 'Frequency (Hz)',
+                range: freqRange, // Use same range as input
+                fixedrange: false
+            },
+            yaxis: { 
+                title: 'Magnitude',
+                gridcolor: '#f8f9fa',
+                linecolor: '#E9ECEF',
+                fixedrange: false
+            },
+            plot_bgcolor: '#FFFFFF',
+            paper_bgcolor: '#FFFFFF',
+            showlegend: false
+        });
+    }
+    
+    // Update output spectrogram if 2D data is available
+    if (result.output_spectrogram_2d && result.output_spectrogram_2d.z) {
+        const specTimes = result.output_spectrogram_2d.x;
+        const specFreqs = result.output_spectrogram_2d.y;
+        
+        Plotly.react('outputSpectrogramPlot', [{
+            z: result.output_spectrogram_2d.z,
+            x: specTimes,
+            y: specFreqs,
+            type: 'heatmap',
+            colorscale: 'Hot',
+            showscale: true,
+            colorbar: {
+                title: 'dB'
+            },
+            name: 'Output Spectrogram'
+        }], {
+            margin: { t: 10, r: 30, b: 50, l: 60 },
+            xaxis: { 
+                title: 'Time (s)',
+                range: timeRange, // Use same range as input
+                fixedrange: false
+            },
+            yaxis: { 
+                title: 'Frequency (Hz)',
+                range: freqRange, // Use same range as input
+                fixedrange: false
+            }
+        });
+        console.log("✅ Output spectrogram updated");
+    }
+    
+    // Re-establish synchronization after updates
+    setTimeout(() => {
+        resyncPlotsAfterUpdate();
+        forceSynchronizeRanges();
+    }, 100);
+    
+    // Enable output controls
+    elements.playOutputBtn.disabled = false;
+    elements.downloadBtn.disabled = false;
+    elements.outputLinearScale.disabled = false;
+    elements.outputAudiogramScale.disabled = false;
+    elements.speedControlOutput.disabled = false;
+    
+    console.log("✅ All output visualizations updated with synchronized ranges");
+}
+
+// Force synchronization of ranges between input and output plots
+function forceSynchronizeRanges() {
+    console.log("🔄 Forcing range synchronization...");
+    
+    const plotPairs = [
+        { input: 'inputSignalPlot', output: 'outputSignalPlot', type: 'time' },
+        { input: 'inputFourierPlot', output: 'outputFourierPlot', type: 'frequency' },
+        { input: 'inputSpectrogramPlot', output: 'outputSpectrogramPlot', type: 'both' }
+    ];
+    
+    plotPairs.forEach(pair => {
+        const inputPlot = document.getElementById(pair.input);
+        const outputPlot = document.getElementById(pair.output);
+        
+        if (inputPlot && outputPlot) {
+            // Apply global ranges to both plots
+            const update = {};
+            
+            if (pair.type === 'time' || pair.type === 'both') {
+                update['xaxis.range'] = globalTimeRange;
+            }
+            
+            if (pair.type === 'frequency' || pair.type === 'both') {
+                if (pair.input === 'inputFourierPlot') {
+                    update['xaxis.range'] = globalFreqRange;
+                } else {
+                    update['yaxis.range'] = globalFreqRange;
+                }
+            }
+            
+            if (Object.keys(update).length > 0) {
+                // Apply to both input and output for consistency
+                Plotly.relayout(inputPlot, update).catch(console.error);
+                Plotly.relayout(outputPlot, update).catch(console.error);
+            }
+        }
+    });
 }
 
 // Switch processing mode
@@ -606,7 +927,6 @@ async function switchMode(mode) {
             </div>
         `;
         currentMode = '';
-        elements.applyButton.disabled = true;
         return;
     }
     
@@ -629,24 +949,28 @@ async function switchMode(mode) {
         }
         
         generateEqualizerSliders(mode, currentSettings);
-        elements.applyButton.disabled = false;
         
         elements.modeStatus.innerHTML = `<i class="bi bi-check-circle"></i> ${mode.charAt(0).toUpperCase() + mode.slice(1)} mode loaded (${currentSettings.sliders.length} sliders)`;
+        
+        // Auto-process with default slider values when mode changes
+        if (isAudioLoaded) {
+            await processImmediately();
+        }
         
     } catch (error) {
         console.error('❌ Error loading mode settings:', error);
         elements.modeStatus.innerHTML = `<i class="bi bi-exclamation-triangle"></i> Backend Error: ${error.message}`;
-        elements.applyButton.disabled = true;
     }
 }
 
-// Generate equalizer sliders from backend settings
+// Generate equalizer sliders with DELAYED real-time processing
 function generateEqualizerSliders(mode, settings) {
-    console.log(`🎛️ Generating sliders for ${mode} mode`);
+    console.log(`🎛️ Generating sliders for ${mode} mode with DELAYED real-time processing`);
     const sliders = settings.sliders;
     
     // Reset gain values for this mode
     gainValues = new Array(sliders.length).fill(1.0);
+    lastProcessedGains = [...gainValues];
     
     elements.equalizerControls.innerHTML = `
         <div class="mb-3 p-3 bg-orange-light rounded">
@@ -659,8 +983,8 @@ function generateEqualizerSliders(mode, settings) {
                     <span class="slider-value" id="value${index}">1.0x</span>
                 </div>
                 ${slider.description ? `<div class="slider-description"><small>${slider.description}</small></div>` : ''}
-                <input type="range" class="custom-slider" min="0" max="2" value="1" step="0.1" 
-                        data-index="${index}">
+                <input type="range" class="custom-slider" min="0" max="2" value="1" step="0.01" 
+                        data-index="${index}" id="slider-${index}">
                 <div class="frequency-bands">
                     <small>Frequency bands: ${slider.frequency_bands.map(band => `${band[0]}-${band[1]}Hz`).join(', ')}</small>
                 </div>
@@ -668,41 +992,89 @@ function generateEqualizerSliders(mode, settings) {
         `).join('')}
     `;
     
-    // Add event listeners to sliders
+    // Add event listeners to sliders with delayed processing
     document.querySelectorAll('.custom-slider').forEach(slider => {
+        // Input event for immediate value update but delayed processing
         slider.addEventListener('input', (e) => {
             const index = parseInt(e.target.dataset.index);
-            updateSliderValue(index, e.target.value);
+            const value = parseFloat(e.target.value);
+            updateSliderValue(index, value);
+            
+            // Show real-time feedback with delay indication
+            showRealTimeFeedback();
+            
+            // Schedule delayed processing
+            scheduleImmediateProcessing();
         });
     });
     
-    console.log(`✅ ${sliders.length} sliders generated`);
+    console.log(`✅ ${sliders.length} sliders generated with ${PROCESSING_DEBOUNCE_MS}ms delayed processing`);
 }
 
-// Update slider value display
-function updateSliderValue(index, value) {
-    gainValues[index] = parseFloat(value);
-    document.getElementById(`value${index}`).textContent = `${value}x`;
-    console.log(`🎚️ Slider ${index} updated to ${value}`);
+// Schedule delayed processing with visual feedback
+function scheduleImmediateProcessing() {
+    // Clear any existing debounce
+    if (processingDebounce) {
+        clearTimeout(processingDebounce);
+    }
+    
+    // Clean up very old pending requests (older than 30 seconds)
+    const now = Date.now();
+    for (let [requestId, data] of pendingRequests.entries()) {
+        if (now - data.timestamp > 30000) { // 30 seconds
+            console.log(`🧹 Cleaning up old request ${requestId}`);
+            pendingRequests.delete(requestId);
+        }
+    }
+    
+    // Show "waiting" state with delay information
+    elements.processStatus.innerHTML = `<i class="bi bi-clock text-info"></i> Adjusting... (Will process in ${PROCESSING_DEBOUNCE_MS}ms)`;
+    
+    // Schedule the processing function to run after debounce
+    processingDebounce = setTimeout(() => {
+        if (isAudioLoaded && currentMode) {
+            processImmediately();
+        }
+    }, PROCESSING_DEBOUNCE_MS);
 }
 
-// Process the signal with backend
-async function processSignal() {
+// Process with backend after delay - FIXED VERSION (No Race Conditions)
+async function processImmediately() {
     if (!inputSignal || !currentMode || !currentSettings) return;
     
+    // Check if we're already processing the same gains
+    if (lastProcessedGains && arraysEqual(gainValues, lastProcessedGains)) {
+        console.log("⏭️ Skipping duplicate processing request");
+        return;
+    }
+    
+    // Create a request ID to track this specific request
+    const requestId = Date.now();
+    currentRequestId = requestId;
+    
+    // Store the current gains that we're sending
+    const currentGainsToProcess = [...gainValues];
+    
+    // Store this request in our pending queue
+    pendingRequests.set(requestId, {
+        gains: currentGainsToProcess,
+        timestamp: Date.now()
+    });
+    
+    console.log(`⚡ [Request ${requestId}] Processing signal with ${currentMode} mode...`, currentGainsToProcess);
+    console.log(`📊 Active requests: ${pendingRequests.size}`);
+    
+    elements.processStatus.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing changes with backend...';
+    
     try {
-        console.log(`🔧 Processing signal with ${currentMode} mode...`);
-        elements.processStatus.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing with backend...';
-        elements.applyButton.disabled = true;
-        
         const formData = new FormData();
         formData.append('file', inputSignal);
-        formData.append('sliders', JSON.stringify(gainValues));
+        formData.append('sliders', JSON.stringify(currentGainsToProcess));
         formData.append('scale', currentOutputScale);
         
-        console.log('📤 Sending to backend:', {
+        console.log(`📤 [Request ${requestId}] Sending to backend:`, {
             mode: currentMode,
-            sliders: gainValues,
+            sliders: currentGainsToProcess,
             scale: currentOutputScale
         });
         
@@ -717,134 +1089,174 @@ async function processSignal() {
         }
         
         const result = await response.json();
-        console.log('📥 Backend response:', result);
+        
+        // ⚠️ CRITICAL FIX: Check if this request is still relevant
+        if (!isRequestStillRelevant(requestId, currentGainsToProcess)) {
+            console.log(`🔄 [Request ${requestId}] Response outdated - ignoring. Current request: ${currentRequestId}`);
+            pendingRequests.delete(requestId);
+            return;
+        }
+        
+        console.log(`📥 [Request ${requestId}] Backend response received and accepted`);
         
         if (!result.success) {
             throw new Error(result.error || 'Backend processing failed');
         }
         
+        // Mark this as the last successful request
+        lastSuccessfulRequestId = requestId;
+        
         // Store processed audio buffer for playback
         if (result.processed_audio_base64) {
-            console.log("🔊 Decoding processed audio...");
+            console.log(`🔊 [Request ${requestId}] Decoding processed audio...`);
             const audioData = Uint8Array.from(atob(result.processed_audio_base64), c => c.charCodeAt(0));
             processedAudioBuffer = await audioContext.decodeAudioData(audioData.buffer);
-            console.log("✅ Processed audio decoded");
+            console.log(`✅ [Request ${requestId}] Processed audio decoded`);
         }
         
-        // Update visualizations with backend data
+        // Update output visualizations with backend data
         updateOutputVisualizations(result);
         
-        // Show output section
-        elements.outputSection.classList.remove('hidden');
+        // Store last processed gains
+        lastProcessedGains = [...currentGainsToProcess];
         
-        elements.processStatus.innerHTML = '<i class="bi bi-check-circle"></i> Backend processing complete';
-        console.log("✅ Signal processing completed successfully");
+        // Clear all pending requests since we got a successful response
+        pendingRequests.clear();
+        
+        elements.processStatus.innerHTML = '<i class="bi bi-check-circle"></i> Processing complete';
+        console.log(`✅ [Request ${requestId}] Signal processing completed successfully`);
         
     } catch (error) {
-        console.error('❌ Error processing signal:', error);
-        elements.processStatus.innerHTML = `<i class="bi bi-exclamation-triangle"></i> Backend Error: ${error.message}`;
-    } finally {
-        elements.applyButton.disabled = false;
+        // Only show error if this request is still relevant
+        if (isRequestStillRelevant(requestId, currentGainsToProcess)) {
+            console.error(`❌ [Request ${requestId}] Error processing signal:`, error);
+            elements.processStatus.innerHTML = `<i class="bi bi-exclamation-triangle"></i> Backend Error: ${error.message}`;
+        } else {
+            console.log(`🔇 [Request ${requestId}] Error ignored - request no longer relevant`);
+        }
+        
+        // Clean up this request regardless
+        pendingRequests.delete(requestId);
     }
 }
 
-// Update output visualizations from backend response
-function updateOutputVisualizations(result) {
-    console.log("🔄 Updating output visualizations...");
-    
-    // Update output signal plot
-    if (result.output_signal && result.output_signal.time) {
-        Plotly.react('outputSignalPlot', [{
-            x: result.output_signal.time,
-            y: result.output_signal.amplitude,
-            type: 'scatter',
-            mode: 'lines',
-            line: { color: '#E55A2B', width: 1.5 },
-            name: 'Output Signal'
-        }], {
-            margin: { t: 10, r: 30, b: 50, l: 60 },
-            xaxis: { title: 'Time (s)' },
-            yaxis: { title: 'Amplitude' }
-        });
-        console.log("✅ Output signal plot updated");
-    }
-   
-   // Update output Fourier transform
-if (result.output_spectrogram) {
-    Plotly.react('outputFourierPlot', [{
-        x: result.output_spectrogram.frequencies,
-        y: result.output_spectrogram.magnitudes,
-        type: 'scatter',
-        mode: 'lines',
-        line: { color: '#E55A2B', width: 2 },
-        name: 'Output Spectrum'
-    }], {
-        margin: { t: 10, r: 30, b: 50, l: 60 },
-        xaxis: { title: 'Frequency (Hz)' },
-        yaxis: { 
-            title: 'Magnitude',  // ← CHANGE THIS LINE
-            gridcolor: '#f8f9fa',
-            linecolor: '#E9ECEF'
-        },
-        plot_bgcolor: '#FFFFFF',
-        paper_bgcolor: '#FFFFFF',
-        showlegend: false
-    });
-}
-    
-    // Update output spectrogram if 2D data is available
-    if (result.output_spectrogram_2d && result.output_spectrogram_2d.z) {
-        Plotly.react('outputSpectrogramPlot', [{
-            z: result.output_spectrogram_2d.z,
-            x: result.output_spectrogram_2d.x,
-            y: result.output_spectrogram_2d.y,
-            type: 'heatmap',
-            colorscale: 'Hot',
-            showscale: true,
-            colorbar: {
-                title: 'dB'
-            },
-            name: 'Output Spectrogram'
-        }], {
-            margin: { t: 10, r: 30, b: 50, l: 60 },
-            xaxis: { title: 'Time (s)' },
-            yaxis: { title: 'Frequency (Hz)' }
-        });
-        console.log("✅ Output spectrogram updated");
+// Helper function to check if a request is still relevant
+function isRequestStillRelevant(requestId, originalGains) {
+    // If this is the most recent request, it's always relevant
+    if (requestId === currentRequestId) {
+        return true;
     }
     
-    // Enable output controls
-    elements.playOutputBtn.disabled = false;
-    elements.downloadBtn.disabled = false;
-    elements.resetViewBtn.disabled = false;
-    elements.outputLinearScale.disabled = false;
-    elements.outputAudiogramScale.disabled = false;
+    // If gains have changed since this request was made, it's outdated
+    if (!arraysEqual(originalGains, gainValues)) {
+        return false;
+    }
     
-    console.log("✅ All output visualizations updated");
+    // If there are newer pending requests, this one is outdated
+    const newerRequests = Array.from(pendingRequests.entries())
+        .filter(([id, data]) => id > requestId);
+    
+    return newerRequests.length === 0;
 }
 
-// Play input audio
-function playInput() {
-    if (!currentAudioBuffer || isPlaying) return;
+// Show real-time feedback during processing delay
+function showRealTimeFeedback() {
+    elements.processStatus.innerHTML = `<i class="bi bi-clock text-info"></i> Changes detected - will process in ${PROCESSING_DEBOUNCE_MS}ms...`;
+}
+
+// Helper function to compare arrays
+function arraysEqual(arr1, arr2) {
+    if (arr1.length !== arr2.length) return false;
+    for (let i = 0; i < arr1.length; i++) {
+        if (arr1[i] !== arr2[i]) return false;
+    }
+    return true;
+}
+
+// Update slider value display
+function updateSliderValue(index, value) {
+    gainValues[index] = parseFloat(value);
+    document.getElementById(`value${index}`).textContent = `${value.toFixed(2)}x`;
+    console.log(`🎚️ Slider ${index} updated to ${value}`);
+}
+
+// Play audio with synchronized playback - FIXED VERSION
+function playAudio(type) {
+    // If already playing the same buffer, pause it
+    if (isPlaying && currentPlaybackBuffer === type) {
+        pauseSignal();
+        return;
+    }
+    
+    // If playing different buffer, pause current first
+    if (isPlaying && currentPlaybackBuffer !== type) {
+        pauseSignal();
+    }
+    
+    let bufferToPlay;
+    if (type === 'input') {
+        bufferToPlay = currentAudioBuffer;
+        currentPlaybackBuffer = 'input';
+    } else {
+        bufferToPlay = processedAudioBuffer;
+        currentPlaybackBuffer = 'output';
+    }
+    
+    if (!bufferToPlay) return;
     
     try {
-        console.log("▶️ Playing input audio...");
+        console.log(`▶️ Playing ${type} audio from ${currentPlaybackTime.toFixed(2)}s...`);
+        
+        // Stop any existing playback
         if (playbackSource) {
             playbackSource.stop();
         }
         
         playbackSource = audioContext.createBufferSource();
-        playbackSource.buffer = currentAudioBuffer;
+        playbackSource.buffer = bufferToPlay;
         playbackSource.playbackRate.value = playbackRate;
         playbackSource.connect(audioContext.destination);
-        playbackSource.start();
+        
+        // Calculate start offset based on current playback time
+        const startOffset = Math.min(currentPlaybackTime, bufferToPlay.duration - 0.1);
+        
+        // Store playback start time for accurate position tracking
+        playbackStartTime = audioContext.currentTime;
+        playbackOffset = startOffset;
+        
+        // Start from current playback time
+        playbackSource.start(0, startOffset);
         
         isPlaying = true;
+        updatePlaybackButtons();
+        
+        // Update playback position in real-time
+        const updateTime = () => {
+            if (isPlaying && playbackSource) {
+                currentPlaybackTime = playbackOffset + (audioContext.currentTime - playbackStartTime) * playbackRate;
+                
+                // Check if playback reached the end
+                if (currentPlaybackTime >= bufferToPlay.duration) {
+                    currentPlaybackTime = 0;
+                    playbackOffset = 0;
+                    isPlaying = false;
+                    playbackSource = null;
+                    updatePlaybackButtons();
+                    console.log("⏹️ Audio playback completed");
+                } else {
+                    requestAnimationFrame(updateTime);
+                }
+            }
+        };
+        updateTime();
         
         playbackSource.onended = function() {
-            console.log("⏹️ Input audio playback ended");
+            console.log("⏹️ Audio playback ended");
             isPlaying = false;
             playbackSource = null;
+            currentPlaybackTime = 0;
+            playbackOffset = 0;
+            updatePlaybackButtons();
         };
         
     } catch (error) {
@@ -853,64 +1265,96 @@ function playInput() {
     }
 }
 
-// Play output audio
-function playOutput() {
-    if (!processedAudioBuffer || isPlaying) return;
+// Update playback buttons state - FIXED VERSION
+function updatePlaybackButtons() {
+    const isInputActive = isPlaying && currentPlaybackBuffer === 'input';
+    const isOutputActive = isPlaying && currentPlaybackBuffer === 'output';
     
-    try {
-        console.log("▶️ Playing output audio...");
-        if (playbackSource) {
-            playbackSource.stop();
-        }
-        
-        playbackSource = audioContext.createBufferSource();
-        playbackSource.buffer = processedAudioBuffer;
-        playbackSource.playbackRate.value = playbackRate;
-        playbackSource.connect(audioContext.destination);
-        playbackSource.start();
-        
-        isPlaying = true;
-        
-        playbackSource.onended = function() {
-            console.log("⏹️ Output audio playback ended");
-            isPlaying = false;
-            playbackSource = null;
-        };
-        
-    } catch (error) {
-        console.error('❌ Error playing output audio:', error);
-        alert('Error playing output audio: ' + error.message);
+    // Update input button
+    if (isInputActive) {
+        elements.playInputBtn.innerHTML = '<i class="bi bi-pause-fill"></i> Pause';
+        elements.playInputBtn.classList.add('active');
+    } else {
+        elements.playInputBtn.innerHTML = '<i class="bi bi-play-fill"></i> Play Input';
+        elements.playInputBtn.classList.remove('active');
     }
+    
+    // Update output button
+    if (isOutputActive) {
+        elements.playOutputBtn.innerHTML = '<i class="bi bi-pause-fill"></i> Pause';
+        elements.playOutputBtn.classList.add('active');
+    } else {
+        elements.playOutputBtn.innerHTML = '<i class="bi bi-play-fill"></i> Play Output';
+        elements.playOutputBtn.classList.remove('active');
+    }
+    
+    // Update pause buttons
+    elements.pauseBtn.disabled = !isPlaying;
+    elements.pauseOutputBtn.disabled = !isPlaying;
+    
+    // Update button states based on availability
+    elements.playInputBtn.disabled = !currentAudioBuffer;
+    elements.playOutputBtn.disabled = !processedAudioBuffer;
 }
 
-// Pause signal playback
+// Pause signal playback - FIXED VERSION
 function pauseSignal() {
     if (playbackSource && isPlaying) {
-        console.log("⏸️ Pausing audio playback");
+        console.log(`⏸️ Pausing ${currentPlaybackBuffer} audio at ${currentPlaybackTime.toFixed(2)}s`);
+        
+        // Stop the current source
         playbackSource.stop();
+        
+        // Keep the currentPlaybackTime for resuming
         isPlaying = false;
         playbackSource = null;
+        updatePlaybackButtons();
+        
+        console.log(`💾 Playback position saved: ${currentPlaybackTime.toFixed(2)}s`);
     }
 }
 
-// Stop signal playback
+// Stop signal playback - FIXED VERSION  
 function stopSignal() {
     if (playbackSource) {
-        console.log("⏹️ Stopping audio playback");
+        console.log("⏹️ Stopping audio playback and resetting position");
         playbackSource.stop();
         isPlaying = false;
         playbackSource = null;
+        currentPlaybackTime = 0;
+        playbackOffset = 0;
+        currentPlaybackBuffer = null;
+        updatePlaybackButtons();
     }
 }
 
-// Set playback speed
+// Set playback speed - FIXED VERSION WITH SYNCHRONIZED CONTROLS
 function setSpeed(speed) {
-    playbackRate = parseFloat(speed);
-    elements.speedValue.textContent = `${speed}x`;
-    console.log(`🎚️ Playback speed set to ${speed}x`);
+    const newPlaybackRate = parseFloat(speed);
     
-    if (playbackSource && isPlaying) {
-        playbackSource.playbackRate.value = playbackRate;
+    // Update both speed controls to stay in sync
+    elements.speedControl.value = speed;
+    elements.speedControlOutput.value = speed;
+    elements.speedValue.textContent = `${speed}x`;
+    elements.speedValueOutput.textContent = `${speed}x`;
+    
+    // Only update if speed actually changed
+    if (newPlaybackRate !== playbackRate) {
+        playbackRate = newPlaybackRate;
+        
+        console.log(`🎚️ Playback speed set to ${speed}x`);
+        
+        // If currently playing, restart with new speed from current position
+        if (playbackSource && isPlaying && currentPlaybackBuffer) {
+            const wasPlaying = true;
+            const currentBuffer = currentPlaybackBuffer;
+            const oldTime = currentPlaybackTime;
+            
+            console.log(`🔄 Restarting playback with new speed from ${oldTime.toFixed(2)}s`);
+            pauseSignal();
+            currentPlaybackTime = oldTime; // Maintain position
+            playAudio(currentBuffer); // Restart with new speed
+        }
     }
 }
 
@@ -934,9 +1378,9 @@ function setOutputScale(scale) {
     elements.outputLinearScale.classList.toggle('active', scale === 'linear');
     elements.outputAudiogramScale.classList.toggle('active', scale === 'audiogram');
     
-    // Reprocess with new scale if we have output
-    if (elements.outputSection && !elements.outputSection.classList.contains('hidden')) {
-        processSignal();
+    // Auto-process with new scale
+    if (isAudioLoaded && currentMode) {
+        processImmediately();
     }
 }
 
@@ -987,7 +1431,6 @@ function downloadOutput() {
     
     try {
         console.log("💾 Downloading processed audio...");
-        // Create a WAV file from the processed audio buffer
         const audioData = new Float32Array(processedAudioBuffer.length);
         audioData.set(processedAudioBuffer.getChannelData(0));
         
@@ -1053,20 +1496,13 @@ function resetEqualizer() {
         updateSliderValue(index, 1.0);
     });
     
-    // Reprocess the signal
+    // Auto-process with reset values
     if (isAudioLoaded && currentMode) {
-        processSignal();
+        processImmediately();
     }
 }
 
-// Reset view - now clears all graphs
-function resetView() {
-    console.log("🔄 Resetting all views...");
-    resetAllGraphs();
-}
-
-// Reset individual graph functions - SIMPLIFIED VERSION
-// Reset individual graph functions - CLEAR GRAPH VERSION
+// Reset individual graph functions
 function resetInputSignal() {
     console.log("🔄 Clearing input signal plot...");
     try {
@@ -1078,7 +1514,7 @@ function resetInputSignal() {
             name: 'Input Signal'
         }], {
             margin: { t: 10, r: 30, b: 50, l: 60 },
-            xaxis: { title: 'Time (s)' },
+            xaxis: { title: 'Time (s)', range: globalTimeRange },
             yaxis: { title: 'Amplitude' }
         });
         console.log("✅ Input signal plot cleared");
@@ -1098,7 +1534,7 @@ function resetInputFourier() {
             name: 'Input Frequency Spectrum'
         }], {
             margin: { t: 10, r: 30, b: 50, l: 60 },
-            xaxis: { title: 'Frequency (Hz)' },
+            xaxis: { title: 'Frequency (Hz)', range: globalFreqRange },
             yaxis: { title: 'Magnitude' }
         });
         console.log("✅ Input frequency spectrum cleared");
@@ -1119,8 +1555,8 @@ function resetInputSpectrogram() {
             name: 'Input Spectrogram'
         }], {
             margin: { t: 10, r: 30, b: 50, l: 60 },
-            xaxis: { title: 'Time (s)' },
-            yaxis: { title: 'Frequency (Hz)' }
+            xaxis: { title: 'Time (s)', range: globalTimeRange },
+            yaxis: { title: 'Frequency (Hz)', range: globalFreqRange }
         });
         console.log("✅ Input spectrogram cleared");
     } catch (error) {
@@ -1139,7 +1575,7 @@ function resetOutputSignal() {
             name: 'Output Signal'
         }], {
             margin: { t: 10, r: 30, b: 50, l: 60 },
-            xaxis: { title: 'Time (s)' },
+            xaxis: { title: 'Time (s)', range: globalTimeRange },
             yaxis: { title: 'Amplitude' }
         });
         console.log("✅ Output signal plot cleared");
@@ -1159,7 +1595,7 @@ function resetOutputFourier() {
             name: 'Output Frequency Spectrum'
         }], {
             margin: { t: 10, r: 30, b: 50, l: 60 },
-            xaxis: { title: 'Frequency (Hz)' },
+            xaxis: { title: 'Frequency (Hz)', range: globalFreqRange },
             yaxis: { title: 'Magnitude' }
         });
         console.log("✅ Output frequency spectrum cleared");
@@ -1180,8 +1616,8 @@ function resetOutputSpectrogram() {
             name: 'Output Spectrogram'
         }], {
             margin: { t: 10, r: 30, b: 50, l: 60 },
-            xaxis: { title: 'Time (s)' },
-            yaxis: { title: 'Frequency (Hz)' }
+            xaxis: { title: 'Time (s)', range: globalTimeRange },
+            yaxis: { title: 'Frequency (Hz)', range: globalFreqRange }
         });
         console.log("✅ Output spectrogram cleared");
     } catch (error) {
@@ -1189,17 +1625,6 @@ function resetOutputSpectrogram() {
     }
 }
 
-// Reset ALL graphs at once
-function resetAllGraphs() {
-    console.log("🔄 Resetting ALL graphs...");
-    resetInputSignal();
-    resetInputFourier();
-    resetInputSpectrogram();
-    resetOutputSignal();
-    resetOutputFourier();
-    resetOutputSpectrogram();
-    console.log("✅ All graphs reset");
-}
 // Save settings
 function saveSettings() {
     const settings = {
