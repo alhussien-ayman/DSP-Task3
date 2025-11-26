@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List, Union
+from typing import List, Union , Dict
 from math import log10
 
 class VisualizationUtils:
@@ -8,38 +8,37 @@ class VisualizationUtils:
    
     @staticmethod
     def linear_to_audiogram(
-        frequencies: Union[List[float], np.ndarray],
+    frequencies: Union[List[float], np.ndarray],
         values: Union[List[float], np.ndarray]
-    ) -> dict:
+    ) -> Dict[str, List[float]]:
         """
-        Convert linear magnitude to audiogram (dB + dB HL).
-        • 20 * log10(magnitude) → dB
-        • Floor at -120 dB
-        • dB HL: 0 dB = peak
-
-        Returns dict with:
-            frequencies, magnitude, magnitude_db, magnitude_db_hl
+        Convert a linear magnitude spectrum → audiogram-style plot
+        (0 dB HL = peak of the signal)
         """
         freq = np.asarray(frequencies, dtype=float)
-        mag = np.asarray(values, dtype=float)
+        mag  = np.asarray(values, dtype=float)
 
         if freq.shape != mag.shape:
             raise ValueError("frequencies and values must have the same length")
 
-        mag_safe = np.where(mag > 1e-10, mag, 1e-10)
-        magnitude_db = 20.0 * np.log10(mag_safe)
-        magnitude_db = np.clip(magnitude_db, -120.0, None)
+        # Prevent log(0) or log(negative)
+        mag_clipped = np.where(mag <= 0, 1e-10, mag)
 
-        peak_db = np.max(magnitude_db) if len(magnitude_db) > 0 else 0
-        magnitude_db_hl = magnitude_db - peak_db
+        # Linear magnitude → dB FS
+        magnitude_db_fs = 20.0 * np.log10(mag_clipped)
+        magnitude_db_fs = np.clip(magnitude_db_fs, -120.0, None)
+
+        # Normalize so the peak becomes 0 dB HL (exactly what people want for "audiogram" plots)
+        peak_db = np.max(magnitude_db_fs)
+        magnitude_db_hl = magnitude_db_fs - peak_db
 
         return {
-            "frequencies": freq.tolist(),
-            "magnitude": mag.tolist(),
-            "magnitude_db": magnitude_db.tolist(),
-            "magnitude_db_hl": magnitude_db_hl.tolist(),
-    }
-    
+            "frequencies":       freq.tolist(),
+            "magnitude_linear":  mag.tolist(),
+            "magnitude_db_fs":   magnitude_db_fs.tolist(),
+            "magnitude_db_hl":   magnitude_db_hl.tolist(),   # this is the one you plot!
+            "peak_db_fs":        float(peak_db)
+        }
     @staticmethod
     def prepare_spectrogram_data(spectrogram, frequencies, scale='linear'):
         """Prepare spectrogram data for frequency spectrum visualization"""
