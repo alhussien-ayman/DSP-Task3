@@ -40,6 +40,11 @@
       rel="stylesheet"
     />
     <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet" />
+    <!-- noUiSlider CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css"
+    />
 
     <!-- Main CSS File -->
     <link href="assets/css/main.css" rel="stylesheet" />
@@ -47,6 +52,156 @@
 
     <!-- External Libraries -->
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+      /* Add Band Modal Styles */
+      #addBandModal .modal-content {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      }
+
+      #addBandModal .modal-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-bottom: none;
+        border-radius: 12px 12px 0 0;
+      }
+
+      #addBandModal .modal-header .btn-close {
+        filter: invert(1);
+      }
+
+      .section-title {
+        color: #495057;
+        font-weight: 600;
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 0.5rem;
+      }
+
+      /* Range Slider Styles */
+      .range-slider {
+        height: 6px;
+        background: #e9ecef;
+        border-radius: 3px;
+        position: relative;
+        margin: 20px 0;
+      }
+
+      .range-slider .noUi-base {
+        background: #e9ecef;
+        border-radius: 3px;
+      }
+
+      .range-slider .noUi-connect {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      .range-slider .noUi-handle {
+        height: 20px;
+        width: 20px;
+        border: 2px solid #667eea;
+        background: white;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        cursor: grab;
+      }
+
+      .range-slider .noUi-handle:focus {
+        outline: none;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.6);
+      }
+
+      /* Gain Meter */
+      .gain-meter {
+        width: 30px;
+        height: 120px;
+        background: #e9ecef;
+        border-radius: 15px;
+        position: relative;
+        overflow: hidden;
+        margin: 0 auto;
+      }
+
+      .gain-fill {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        background: linear-gradient(to top, #28a745, #ffc107, #dc3545);
+        border-radius: 15px;
+        transition: height 0.3s ease;
+        height: 50%;
+      }
+
+      /* Preset Range Buttons */
+      .preset-range {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.5rem;
+      }
+
+      .preset-range:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      /* Bandwidth Info */
+      .bandwidth-info {
+        background: rgba(23, 162, 184, 0.1);
+        border: 1px solid rgba(23, 162, 184, 0.2);
+        border-radius: 8px;
+      }
+
+      /* Form Controls */
+      #addBandModal .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+      }
+
+      #addBandModal .form-range:focus {
+        outline: none;
+      }
+
+      #addBandModal .form-range::-webkit-slider-thumb {
+        background: #667eea;
+        border: none;
+      }
+
+      #addBandModal .form-range::-moz-range-thumb {
+        background: #667eea;
+        border: none;
+      }
+
+      /* Playhead Styles */
+      .playhead {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #ff6b6b;
+        z-index: 10;
+        pointer-events: none;
+        transition: left 0.1s ease;
+      }
+
+      .playhead.playing {
+        background: #ff6b6b;
+        box-shadow: 0 0 10px rgba(255, 107, 107, 0.7);
+      }
+
+      .playhead::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -3px;
+        width: 8px;
+        height: 8px;
+        background: #ff6b6b;
+        border-radius: 50%;
+      }
+
+      .cine-viewer {
+        position: relative;
+      }
+    </style>
   </head>
 
   <body class="generic-mode-page">
@@ -75,41 +230,7 @@
     </header>
 
     <main class="main">
-      <!-- Hero Headline Section -->
-      <section id="headline" class="headline-section section">
-        <div class="container">
-          <div class="row justify-content-center text-center">
-            <div class="col-lg-8" data-aos="fade-up" data-aos-delay="100">
-              <h1 class="headline-title">
-                <i class="bi bi-sliders2-vertical me-3"></i>
-                Generic Audio Equalizer
-              </h1>
-              <p class="headline-subtitle">
-                Advanced signal processing with real-time visualization and
-                precise frequency control
-              </p>
-              <div class="headline-features">
-                <div class="feature-badges">
-                  <span class="feature-badge">
-                    <i class="bi bi-graph-up me-1"></i>Frequency Analysis
-                  </span>
-                  <span class="feature-badge">
-                    <i class="bi bi-soundwave me-1"></i>Waveform Visualization
-                  </span>
-                  <span class="feature-badge">
-                    <i class="bi bi-collection-play me-1"></i>Real-time
-                    Processing
-                  </span>
-                  <span class="feature-badge">
-                    <i class="bi bi-gear me-1"></i>Custom Presets
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
+      
       <!-- Equalizer Interface Section -->
       <section id="equalizer-interface" class="equalizer-interface section">
         <div class="container">
@@ -485,8 +606,6 @@
                       <!-- Vertical sliders will be dynamically added here -->
                     </div>
                   </div>
-
-                  
                 </div>
               </div>
             </div>
@@ -655,89 +774,6 @@
       </section>
     </main>
 
-    <footer id="footer" class="footer dark-background">
-      <div class="container footer-top">
-        <div class="row gy-4">
-          <div class="col-lg-4 col-md-6 footer-about">
-            <a href="index.html" class="logo d-flex align-items-center">
-              <span class="sitename">Signal Equalizer</span>
-            </a>
-            <div class="footer-contact pt-3">
-              <p>Audio Research Lab</p>
-              <p>University Campus</p>
-              <p class="mt-3">
-                <strong>Email:</strong> <span>support@signalequalizer.com</span>
-              </p>
-              <p><strong>Phone:</strong> <span>+1 5589 55488 55</span></p>
-            </div>
-            <div class="social-links d-flex mt-4">
-              <a href=""><i class="bi bi-twitter-x"></i></a>
-              <a href=""><i class="bi bi-facebook"></i></a>
-              <a href=""><i class="bi bi-instagram"></i></a>
-              <a href=""><i class="bi bi-linkedin"></i></a>
-            </div>
-          </div>
-
-          <div class="col-lg-2 col-md-3 footer-links">
-            <h4>Quick Links</h4>
-            <ul>
-              <li><a href="index.html">Home</a></li>
-              <li><a href="index.html#features">Features</a></li>
-              <li><a href="index.html#modes">Modes</a></li>
-              <li><a href="index.html#applications">Applications</a></li>
-              <li><a href="index.html#about">About</a></li>
-            </ul>
-          </div>
-
-          <div class="col-lg-2 col-md-3 footer-links">
-            <h4>Processing Modes</h4>
-            <ul>
-              <li><a href="generic_mode.html">Generic Mode</a></li>
-              <li><a href="instruments_mode.html">Music Mode</a></li>
-              <li><a href="animals_mode.html">Animal Mode</a></li>
-              <li><a href="voices_mode.html">Voice Mode</a></li>
-            </ul>
-          </div>
-
-          <div class="col-lg-4 col-md-12 footer-newsletter">
-            <h4>Our Newsletter</h4>
-            <p>
-              Subscribe to receive updates on new features and research
-              applications!
-            </p>
-            <form
-              action="forms/newsletter.php"
-              method="post"
-              class="php-email-form"
-            >
-              <div class="newsletter-form">
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Your email"
-                /><input type="submit" value="Subscribe" />
-              </div>
-              <div class="loading">Loading</div>
-              <div class="error-message"></div>
-              <div class="sent-message">
-                Your subscription request has been sent. Thank you!
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      <div class="container copyright text-center mt-4">
-        <p>
-          © <span>Copyright</span>
-          <strong class="px-1 sitename">Signal Equalizer</strong>
-          <span>All Rights Reserved</span>
-        </p>
-        <div class="credits">
-          Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
-        </div>
-      </div>
-    </footer>
 
     <!-- Scroll Top -->
     <a
@@ -774,6 +810,169 @@
       </button>
     </div>
 
+    <!-- Add Band Modal -->
+<div
+  class="modal fade"
+  id="addBandModal"
+  tabindex="-1"
+  aria-labelledby="addBandModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addBandModalLabel">
+          <i class="bi bi-plus-circle me-2"></i>Add Custom Frequency Band
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <!-- Frequency Range Section -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <div class="frequency-range-section">
+              <h6 class="section-title mb-3">
+                <i class="bi bi-sliders me-2"></i>Frequency Range
+              </h6>
+
+              <!-- Frequency Range Slider -->
+              <div class="frequency-slider-container mb-3">
+                <label class="form-label">Frequency Range Selector</label>
+                <div id="frequencyRangeSlider" class="range-slider"></div>
+                <div
+                  class="slider-labels d-flex justify-content-between mt-2"
+                >
+                  <small>20 Hz</small>
+                  <small id="currentRangeDisplay">1000 - 2000 Hz</small>
+                  <small>20,000 Hz</small>
+                </div>
+              </div>
+
+              <!-- Frequency Inputs (Hidden but still functional) -->
+              <div class="row g-3 mb-3" style="display: none;">
+                <div class="col-md-6">
+                  <label for="startFreq" class="form-label"
+                    >Start Frequency (Hz)</label
+                  >
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="startFreq"
+                    min="20"
+                    max="19900"
+                    value="1000"
+                    step="10"
+                  />
+                  <div class="form-text">Minimum: 20 Hz</div>
+                </div>
+                <div class="col-md-6">
+                  <label for="endFreq" class="form-label"
+                    >End Frequency (Hz)</label
+                  >
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="endFreq"
+                    min="21"
+                    max="20000"
+                    value="2000"
+                    step="10"
+                  />
+                  <div class="form-text">Maximum: 20,000 Hz</div>
+                </div>
+              </div>
+
+              <!-- Bandwidth Display -->
+              <div class="bandwidth-info alert alert-info py-2">
+                <div class="row text-center">
+                  <div class="col-4">
+                    <small
+                      ><strong>Bandwidth:</strong>
+                      <span id="bandwidthValue">1000</span> Hz</small
+                    >
+                  </div>
+                  <div class="col-4">
+                    <small
+                      ><strong>Center:</strong>
+                      <span id="centerFreqValue">1500</span> Hz</small
+                    >
+                  </div>
+                  <div class="col-4">
+                    <small
+                      ><strong>Type:</strong>
+                      <span id="bandType">Mid Range</span></small
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gain Settings -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <div class="gain-section">
+              <h6 class="section-title mb-3">
+                <i class="bi bi-volume-up me-2"></i>Gain Settings
+              </h6>
+
+              <div class="row align-items-center">
+                <div class="col-md-8">
+                  <label for="bandGain" class="form-label"
+                    >Gain Level: <span id="gainValue">1.0</span>×</label
+                  >
+                  <input
+                    type="range"
+                    class="form-range"
+                    id="bandGain"
+                    min="0"
+                    max="2"
+                    step="0.1"
+                    value="1.0"
+                  />
+                  <div class="gain-labels d-flex justify-content-between">
+                    <small class="text-danger">0.0× (Mute)</small>
+                    <small class="text-primary">1.0× (Neutral)</small>
+                    <small class="text-success">2.0× (Boost)</small>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="gain-visual text-center">
+                    <div class="gain-meter">
+                      <div class="gain-fill" id="gainFill"></div>
+                    </div>
+                    <small class="text-muted">Gain Preview</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+        >
+          Cancel
+        </button>
+        <button type="button" class="btn btn-success" id="confirmAddBand">
+          <i class="bi bi-plus-circle me-1"></i>Add Band
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
     <!-- Vendor JS Files -->
     <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="assets/vendor/php-email-form/validate.js"></script>
@@ -783,6 +982,8 @@
     <script src="assets/vendor/purecounter/purecounter_vanilla.js"></script>
     <script src="assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
     <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+    <!-- noUiSlider JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
 
     <!-- Main JS File -->
     <script src="assets/js/main.js"></script>
