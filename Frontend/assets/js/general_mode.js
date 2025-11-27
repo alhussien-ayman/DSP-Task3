@@ -657,7 +657,8 @@ async function getInputVisualizations(file) {
         updateOutputVisualizations(result);
         
         elements.processStatus.innerHTML = '<i class="bi bi-check-circle"></i> Input visualizations ready';
-        
+            // Return the result so other modules can reuse the computed visualizations
+            return result;
     } catch (error) {
         console.error('❌ Error getting input visualizations:', error);
         showError(`Input visualization failed: ${error.message}`);
