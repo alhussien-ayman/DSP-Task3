@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Signal Equalizer - Advanced Audio Processing</title>
+  <meta name="description" content="Professional signal equalizer for audio processing, music production, and biomedical applications">
+  <meta name="keywords" content="signal equalizer, audio processing, frequency analysis, music production, biomedical">
+
+  <!-- Favicons -->
+  <link href="assets/img/logo.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="assets/css/main.css" rel="stylesheet">
+  <link href="assets/css/customized_mode.css" rel="stylesheet">
+
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+  <!-- Plotly.js -->
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+</head>
+
+<body class="equalizer-page">
+
+  <header id="header" class="header d-flex align-items-center sticky-top">
+    <div class="container-fluid container-xl position-relative d-flex align-items-center">
+
+      <a href="index.html" class="logo d-flex align-items-center me-auto">
+        <img src="assets/img/logo2.png" alt="">
+        <span class="sitename">Signal Equalizer</span>
+      </a>
+
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="index.html#hero">Home</a></li>
+          <li><a href="index.html#features">Features</a></li>
+          <li><a href="index.html#modes">Modes</a></li>
+          <li><a href="index.html#applications">Applications</a></li>
+          <li><a href="index.html#about">About</a></li>
+          <li><a href="index.html#contact">Contact</a></li>
+        </ul>
+        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      </nav>
+
+      <a class="btn-getstarted" href="equalizer.html">Launch Equalizer</a>
+
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="container">
+      <div class="equalizer-container">
+        
+        <!-- Header -->
+        <div class="equalizer-header">
+          <h1>Signal Equalizer</h1>
+          <p>Professional Audio Processing & Frequency Analysis</p>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+          <!-- Left Sidebar - Controls -->
+          <div class="left-sidebar">
+            
+            <!-- Upload Section -->
+            <div class="upload-section">
+              <h3 class="section-title"><i class="bi bi-cloud-arrow-up"></i>Upload Audio</h3>
+              <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">
+                  <i class="bi bi-file-earmark-music"></i>
+                </div>
+                <div class="upload-text">
+                  <strong>Upload Audio File</strong>
+                </div>
+                <div class="upload-subtext">
+                  Supported formats: MP3, WAV, FLAC, M4A
+                </div>
+              </div>
+              <input type="file" id="audioFile" accept="audio/*" class="hidden">
+              <div class="file-info" id="fileInfo">
+                <span class="status-indicator status-disabled">
+                  <i class="bi bi-info-circle"></i> No file selected
+                </span>
+              </div>
+            </div>
+
+            <!-- Control Section -->
+            <div class="control-section">
+              
+              <!-- Mode Selector -->
+              <div class="mode-selector">
+                <h3 class="section-title"><i class="bi bi-sliders"></i>Processing Mode</h3>
+                <label class="form-label"><strong>Select Analysis Mode:</strong></label>
+                <select class="form-select" id="modeSelect">
+                  <option value="">Please upload audio first</option>
+                  <option value="instruments">Musical Instruments</option>
+                  <option value="animals">Animal Sounds</option>
+                  <option value="voices">Human Voices</option>
+                </select>
+                <div class="mt-2">
+                  <span class="status-indicator status-disabled" id="modeStatus">
+                    <i class="bi bi-sliders"></i> Mode selection disabled
+                  </span>
+                </div>
+              </div>
+
+              <!-- Sliders Section -->
+              <div class="sliders-section">
+                <h3 class="section-title"><i class="bi bi-equalizer"></i>Frequency Controls</h3>
+                <div id="equalizerControls">
+                  <div class="text-center text-muted py-4">
+                    <i class="bi bi-sliders" style="font-size: 2rem; opacity: 0.3;"></i>
+                    <p class="mt-2">Frequency controls will appear here<br>after selecting a mode</p>
+                  </div>
+                </div>
+              </div>
+
+                        <!-- Process Status -->
+            <div class="process-status-section mt-3">
+              <div class="text-center">
+                <span class="status-indicator status-disabled" id="processStatus">
+                  <i class="bi bi-hourglass-split"></i> Ready for processing
+                </span>
+              </div>
+            </div>
+            </div>
+
+          </div>
+
+          <!-- Right Side - Visualizations -->
+          <div class="visualization-area">
+            
+            <!-- INPUT SECTION - All input views grouped together -->
+            <div class="input-section">
+              <h3 class="section-title">
+                <i class="bi bi-arrow-down-circle"></i>Input Analysis
+              </h3>
+              
+              <!-- Input Cine Viewer -->
+              <div class="cine-viewer">
+                <div class="cine-header">
+                  <div class="cine-title">Input Signal Waveform</div>
+                  <div class="cine-controls">
+                    <button class="btn-cine" id="playInputBtn">
+                      <i class="bi bi-play-fill"></i> Play
+                    </button>
+                    <button class="btn-cine" id="pauseBtn">
+                      <i class="bi bi-pause-fill"></i> Pause
+                    </button>
+                    <button class="btn-cine" id="resetInputSignalBtn">
+                    <i class="bi bi-arrow-clockwise"></i> Reset
+                     </button>
+                    <div class="speed-control">
+                      <span>Speed:</span>
+                      <input type="range" class="speed-slider" id="speedControl" min="0.5" max="2" step="0.1" value="1">
+                      <span id="speedValue">1.0x</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="signal-plot" id="inputSignalPlot"></div>
+              </div>
+
+              <!-- Input Fourier Transform -->
+              <div class="fourier-section">
+                <div class="fourier-header">
+                  <h4 class="section-title">Input Frequency Spectrum</h4>
+                  <div class="scale-controls">
+                    <button class="btn-cine" id="resetInputFourierBtn">
+                     <i class="bi bi-arrow-clockwise"></i> Reset
+                    </button>
+                    <button class="btn-scale active" id="inputLinearScale">Linear Scale</button>
+                    <button class="btn-scale" id="inputAudiogramScale">Audiogram Scale</button>
+                  </div>
+                </div>
+                <div class="fourier-plot" id="inputFourierPlot"></div>
+              </div>
+
+              <!-- Input Spectrogram -->
+              <div class="spectrogram-section">
+                <div class="spectrogram-header">
+                  <h4 class="section-title">Input Spectrogram</h4>
+                  <div class="toggle-controls">
+                    <button class="btn-toggle active" id="inputSpectrogramToggle">
+                      <i class="bi bi-eye-fill"></i> Hide Spectrogram
+                    </button>
+                    <button class="btn-cine" id="resetInputSpectrogramBtn">
+                    <i class="bi bi-arrow-clockwise"></i> Reset
+                  </button>
+                  </div>
+                </div>
+                <div class="spectrogram-grid" id="inputSpectrogramContainer">
+                  <div class="spectrogram-plot" id="inputSpectrogramPlot"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- OUTPUT SECTION - All output views grouped together (hidden initially) -->
+            <div class="output-section hidden" id="outputSection">
+              <h3 class="section-title">
+                <i class="bi bi-arrow-up-circle"></i>Processed Output
+              </h3>
+              
+              <!-- Output Cine Viewer -->
+              <div class="cine-viewer">
+                <div class="cine-header">
+                  <div class="cine-title">Output Signal Waveform</div>
+                  <div class="cine-controls">
+                    <button class="btn-cine" id="playOutputBtn">
+                      <i class="bi bi-play-fill"></i> Play
+                    </button>
+                  <button class="btn-cine" id="pauseOutputBtn">
+                      <i class="bi bi-pause-fill"></i> Pause
+                    </button>
+                    <button class="btn-cine" id="resetOutputSignalBtn">
+                  <i class="bi bi-arrow-clockwise"></i> Reset
+                </button>
+                  <div class="speed-control">
+                  <span>Speed:</span>
+                  <input type="range" class="speed-slider" id="speedControlOutput" min="0.5" max="2" step="0.1" value="1">
+                  <span id="speedValueOutput">1.0x</span>
+                  </div>
+                  </div>
+                </div>
+                <div class="signal-plot" id="outputSignalPlot"></div>
+              </div>
+
+              <!-- Output Fourier Transform -->
+              <div class="fourier-section">
+                <div class="fourier-header">
+                  <h4 class="section-title">Output Frequency Spectrum</h4>
+                  <div class="scale-controls">
+                    <button class="btn-cine" id="resetOutputFourierBtn">
+                    <i class="bi bi-arrow-clockwise"></i> Reset
+                    </button>
+                    <button class="btn-scale active" id="outputLinearScale">Linear Scale</button>
+                    <button class="btn-scale" id="outputAudiogramScale">Audiogram Scale</button>
+                  </div>
+                </div>
+                <div class="fourier-plot" id="outputFourierPlot"></div>
+              </div>
+
+              <!-- Output Spectrogram -->
+              <div class="spectrogram-section">
+                <div class="spectrogram-header">
+                  <h4 class="section-title">Output Spectrogram</h4>
+                  <div class="toggle-controls">
+                    <button class="btn-toggle active" id="outputSpectrogramToggle">
+                      <i class="bi bi-eye-fill"></i> Hide Spectrogram
+                    </button>
+                    <button class="btn-cine" id="resetOutputSpectrogramBtn">
+                    <i class="bi bi-arrow-clockwise"></i> Reset
+                    </button>
+                  </div>
+                </div>
+                <div class="spectrogram-grid" id="outputSpectrogramContainer">
+                  <div class="spectrogram-plot" id="outputSpectrogramPlot"></div>
+                </div>
+              </div>
+
+              <!-- Output Controls -->
+              <div class="output-controls">
+                <button class="btn-control" id="downloadBtn">
+                  <i class="bi bi-download"></i> Download Output
+                </button>
+                <button class="btn-control" id="saveSettingsBtn">
+                  <i class="bi bi-save"></i> Save Settings
+                </button>
+              </div>
+            </div>
+
+            <!-- Warrant Section -->
+            <div class="warrant-section">
+              <strong>Professional Audio Processing System</strong>
+              <br>
+              <small>This equalizer provides real-time frequency analysis, spectrogram visualization, and professional audio enhancement capabilities. 
+              Audiogram scale represents human hearing sensitivity (dB HL), while linear scale shows absolute frequency magnitudes.</small>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <footer id="footer" class="footer dark-background">
+    <div class="container footer-top">
+      <div class="row gy-4">
+        <div class="col-lg-4 col-md-6 footer-about">
+          <a href="index.html" class="logo d-flex align-items-center">
+            <span class="sitename">Signal Equalizer</span>
+          </a>
+          <div class="footer-contact pt-3">
+            <p>Audio Research Lab</p>
+            <p>University Campus</p>
+            <p class="mt-3"><strong>Email:</strong> <span>support@signalequalizer.com</span></p>
+            <p><strong>Phone:</strong> <span>+1 5589 55488 55</span></p>
+          </div>
+          <div class="social-links d-flex mt-4">
+            <a href=""><i class="bi bi-twitter-x"></i></a>
+            <a href=""><i class="bi bi-facebook"></i></a>
+            <a href=""><i class="bi bi-instagram"></i></a>
+            <a href=""><i class="bi bi-linkedin"></i></a>
+          </div>
+        </div>
+
+        <div class="col-lg-2 col-md-3 footer-links">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="index.html#hero">Home</a></li>
+            <li><a href="index.html#features">Features</a></li>
+            <li><a href="index.html#modes">Modes</a></li>
+            <li><a href="index.html#applications">Applications</a></li>
+            <li><a href="index.html#about">About</a></li>
+          </ul>
+        </div>
+
+        <div class="col-lg-2 col-md-3 footer-links">
+          <h4>Processing Modes</h4>
+          <ul>
+            <li><a href="equalizer.html?mode=generic">Generic Mode</a></li>
+            <li><a href="equalizer.html?mode=instruments">Music Mode</a></li>
+            <li><a href="equalizer.html?mode=animals">Animal Mode</a></li>
+            <li><a href="equalizer.html?mode=voices">Voice Mode</a></li>
+          </ul>
+        </div>
+
+        <div class="col-lg-4 col-md-12 footer-newsletter">
+          <h4>Our Newsletter</h4>
+          <p>Subscribe to receive updates on new features and research applications!</p>
+          <form action="forms/newsletter.php" method="post" class="php-email-form">
+            <div class="newsletter-form"><input type="email" name="email" placeholder="Your email"><input type="submit" value="Subscribe"></div>
+            <div class="loading">Loading</div>
+            <div class="error-message"></div>
+            <div class="sent-message">Your subscription request has been sent. Thank you!</div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="container copyright text-center mt-4">
+      <p>© <span>Copyright</span> <strong class="px-1 sitename">Signal Equalizer</strong> <span>All Rights Reserved</span></p>
+      <div class="credits">
+        Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/php-email-form/validate.js"></script>
+  <script src="assets/vendor/aos/aos.js"></script>
+  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+  <script src="assets/vendor/purecounter/purecounter_vanilla.js"></script>
+  <script src="assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
+  <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+
+  <!-- Main JS File -->
+  <script src="assets/js/main.js"></script>
+ 
+  
+
+  <!-- Customized Mode JS -->
+   <script src="assets/js/general_mode.js"></script>
+  <script src="assets/js/customized_mode.js"></script>
+
+</body>
+
+</html>

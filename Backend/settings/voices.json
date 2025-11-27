@@ -1,0 +1,33 @@
+{
+  "sliders": [
+    {
+      "name": "Spanish woman Voice",
+      "frequency_bands": [
+        [800,2500]
+      ],
+      "description": "Spanish female vocal characteristics across multiple frequency bands"
+    },
+    {
+      "name": "Female Voice",
+      "frequency_bands": [
+       [2500,8000]
+      ],
+      "description": "female vocal characteristics with distinct frequency ranges"
+    },
+    {
+      "name": "Man Voice",
+      "frequency_bands": [
+        [100,500]
+      ],
+      "description": "man vocal patterns with specific frequency emphasis"
+    },
+    {
+      "name": "Old Man Voice",
+      "frequency_bands": [
+        [400,600],
+        [2000,3000]
+      ],
+      "description": "Old man vocal characteristics with broad frequency coverage"
+    }
+  ]
+}
